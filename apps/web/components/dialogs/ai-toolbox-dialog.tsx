@@ -1,61 +1,326 @@
 "use client";
-// Removed: import { DialogTitle } from "@radix-ui/react-dialog";
-import { X } from "lucide-react"; // Import X icon for close button
-
+import { copyToClipboard } from "@/lib/utils"; // Import copyToClipboard
+// Import Editor type directly from @tiptap/core
+import type { Editor as TiptapEditor } from "@tiptap/core";
+// Combine all lucide-react imports and add missing ones, including Magic
 import {
-  BookOpen, // 开书灵感
-  Edit, // AI续写
-  Feather, // 卡文锦囊
-  Globe, // AI助手
-  PenTool, // 自定义描写
-  PencilLine, // AI扩写
-  PencilRuler, // AI改写
-  Smile, // AI起名
+  ArrowDownWideNarrow,
+  ArrowUp,
+  BookOpen,
+  CheckCheck,
+  Edit,
+  Feather,
+  Globe,
+  PencilLine,
+  PencilRuler,
+  Smile,
+  X,
 } from "lucide-react";
+import { Copy } from "lucide-react"; // Import Copy icon
+import { addAIHighlight, getPrevText } from "novel"; // Import helpers from novel
+import { useRef, useState } from "react"; // Import hooks
+import Markdown from "react-markdown"; // Import Markdown renderer
+import { toast } from "sonner"; // Import toast notifications
+import { Button } from "../tailwind/ui/button"; // Import Button
+import { Command } from "../tailwind/ui/command"; // Import Command
+import { CommandInput } from "../tailwind/ui/command"; // Import CommandInput
+import CrazySpinner from "../tailwind/ui/icons/crazy-spinner"; // Import Spinner
+import Magic from "../tailwind/ui/icons/magic"; // Import the local Magic component
+import { ScrollArea } from "../tailwind/ui/scroll-area"; // Import ScrollArea
 
 // Define the AI tools data
+// Map AI Selector commands to dialog tools where applicable
 const aiTools = [
-  { name: "AI扩写", icon: PencilLine },
-  { name: "AI改写", icon: PencilRuler },
-  { name: "自定义描写", icon: PenTool },
-  { name: "AI续写", icon: Edit },
+  { name: "扩写", icon: PencilLine, option: "longer" },
+  { name: "润色", icon: PencilRuler, option: "improve" },
+  { name: "缩写", icon: ArrowDownWideNarrow, option: "shorter" }, // Add shorter
+  { name: "纠错", icon: CheckCheck, option: "fix" }, // Add fix
+  // { name: "自定义描写", icon: PenTool, option: "zap" }, // 'zap' will be handled by the input field
+  { name: "续写", icon: Edit, option: "continue" }, // Map to 'continue'
+  // Keep other tools for potential future implementation, but without 'option' for now
   { name: "AI起名", icon: Smile },
   { name: "卡文锦囊", icon: Feather },
   { name: "开书灵感", icon: BookOpen },
-  { name: "AI助手", icon: Globe },
+  { name: "AI助手", icon: Globe }, // This could potentially be the 'zap' command trigger? Or a general chat?
 ];
 
 // Define props type
+interface CompleteOptions {
+  body: {
+    option: string;
+    command?: string;
+  };
+}
+
 interface AiToolboxDialogContentProps {
+  editor: TiptapEditor; // Use the correctly imported type
   onClose: () => void;
 }
 
-export function AiToolboxDialogContent({ onClose }: AiToolboxDialogContentProps) {
+export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogContentProps) {
+  const [inputValue, setInputValue] = useState("");
+  const [completion, setCompletion] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const complete = async (text: string, options?: CompleteOptions) => {
+    setIsLoading(true);
+    setCompletion("");
+    // Don't clear input value here, let the user decide
+    // setInputValue("");
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
+    try {
+      addAIHighlight(editor); // Highlight the text being processed
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: text,
+          ...options?.body,
+        }),
+        signal: abortControllerRef.current.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      let buffer = "";
+      while (reader) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          try {
+            const chunk = JSON.parse(line);
+            const content = chunk.choices[0]?.delta?.content || "";
+            setCompletion((prev) => prev + content);
+          } catch (e) {
+            console.error("Error parsing stream data:", e, line);
+          }
+        }
+      }
+    } catch (err) {
+      // Use default catch or 'unknown' and check type
+      const error = err as Error; // Type assertion or check instanceof Error
+      if (error.name !== "AbortError") {
+        console.error("AI request failed:", error);
+        toast.error(`AI请求失败: ${error.message}`);
+        editor.chain().unsetHighlight().run(); // Remove highlight on error
+      }
+    } finally {
+      setIsLoading(false);
+      abortControllerRef.current = null;
+      // Keep highlight until user interacts (replace/discard)
+    }
+  };
+
+  const handleToolClick = (option: string) => {
+    let text = "";
+    try {
+      const slice = editor.state.selection.content();
+      text = editor.storage.markdown.serializer.serialize(slice.content);
+    } catch {
+      toast.error("未选择文本，无法获取前文内容");
+      return;
+    }
+
+    // Handle 'continue' specifically to get previous text
+    if (option === "continue") {
+      const pos = editor.state.selection.from;
+      // Make sure getPrevText exists and handles potential errors
+      try {
+        text = getPrevText(editor, pos);
+      } catch (e) {
+        console.error("Error getting previous text:", e);
+        toast.error("无法获取前文内容");
+        return;
+      }
+    }
+
+    if (!text && option !== "continue") {
+      toast.error("请先选中文本");
+      return;
+    }
+
+    complete(text, { body: { option } });
+  };
+
+  const handleCustomSubmit = () => {
+    const slice = editor.state.selection.content();
+    const text = editor.storage.markdown.serializer.serialize(slice.content);
+
+    if (!inputValue) {
+      toast.error("请输入自定义指令");
+      return;
+    }
+
+    // Use selected text if available, otherwise prompt might be empty if user only provides command
+    const prompt = text || "";
+    const command = inputValue;
+
+    complete(prompt, {
+      body: { option: "zap", command: command },
+    });
+  };
+
+  const hasCompletion = completion.length > 0;
+
   return (
-    // Removed max-w-screen-md and mx-auto, added z-20, reduced padding, added border-t
-    <div className="fixed bottom-0 left-0 right-0 w-full flex flex-col p-4 bg-gradient-to-b from-red-100 to-white rounded-t-lg shadow-lg z-20 border-t border-gray-200">
-      {/* Header with Close Button - Reduced bottom margin */}
+    // Wrap the content in Command to provide the necessary context for cmdk components
+    <Command className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full h-auto px-4 pt-4 pb-0 bg-background rounded-t-lg shadow-xl z-50 border border-border">
+      {" "}
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        {/* Empty div to push title to center */}
-        <div className="w-8" />
-        {/* Replaced DialogTitle with h2 */}
-        <h2 className="text-sm font-semibold text-gray-800 text-center">AI工具箱</h2>
-        <button type="button" onClick={onClose} className="p-1 rounded-full hover:bg-gray-200">
-          <X className="h-5 w-5 text-gray-500" />
+        <div className="w-8" /> {/* Spacer */}
+        <h2 className="text-sm font-semibold text-foreground text-center">AI工具箱</h2>
+        <button type="button" onClick={onClose} className="p-1 rounded-full hover:bg-muted">
+          <X className="h-5 w-5 text-muted-foreground" />
         </button>
       </div>
-      {/* Body - Flex layout for tight spacing */}
-      <div className="flex flex-wrap justify-center mb-10">
-        {aiTools.map((tool) => (
-          // Adjusted spacing and icon/text size for tighter layout
-          <div key={tool.name} className="flex flex-col items-center mx-1.5 my-1">
-            <tool.icon className="h-7 w-7 text-blue-400 rounded-full" />
-            <span className="text-xs text-gray-600 mt-1.5 text-center overflow-hidden text-ellipsis block whitespace-nowrap w-full px-0.5">
-              {tool.name}
-            </span>
+      {/* Completion Result Area */}
+      {hasCompletion && !isLoading && (
+        <div className="flex flex-col mb-12">
+          {" "}
+          {/* Removed temp border */} {/* Removed mb-4 and border/rounded/bg-muted/30 */}
+          <ScrollArea className="p-2 px-4 max-h-[200px] border border-border rounded-md overflow-y-auto">
+            {" "}
+            {/* Added border and overflow-y-auto */} {/* Removed flex-grow */} {/* Moved max-h here */}{" "}
+            {/* Removed max-h-[200px] and overflow-y-auto */}
+            <div className="prose prose-sm dark:prose-invert max-w-full">
+              <Markdown>{completion}</Markdown>
+            </div>
+          </ScrollArea>
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-2 px-2 pt-2 pb-0">
+            {" "}
+            {/* Adjusted padding */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                editor.chain().unsetHighlight().run();
+                setCompletion("");
+              }}
+              className="bg-transparent text-muted-foreground hover:bg-blue-500/10 hover:text-foreground"
+            >
+              <X className="h-4 w-4 mr-1" />
+              删除
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                editor.chain().insertContentAt(editor.state.selection.to, `\n${completion}`).unsetHighlight().run();
+                setCompletion("");
+                onClose(); // Close dialog after inserting
+              }}
+              className="bg-transparent text-muted-foreground hover:bg-blue-500/10 hover:text-foreground"
+            >
+              <ArrowDownWideNarrow className="h-4 w-4 mr-1" />
+              插入
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                editor.chain().deleteSelection().insertContent(completion).unsetHighlight().run();
+                setCompletion("");
+                onClose(); // Close dialog after replacing
+              }}
+              className="bg-transparent text-muted-foreground hover:bg-blue-500/10 hover:text-foreground"
+            >
+              <CheckCheck className="h-4 w-4 mr-1" />
+              替换
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => copyToClipboard(completion)}
+              className="bg-transparent text-muted-foreground hover:bg-blue-500/10 hover:text-foreground"
+            >
+              <Copy className="h-4 w-4 mr-1" />
+              复制
+            </Button>
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+      )}
+      {/* Loading Indicator */}
+      {isLoading && (
+        <div className="flex h-12 w-full items-center justify-center px-4 text-sm font-medium text-muted-foreground mb-12 text-purple-500">
+          {" "}
+          {/* Removed temp border */} {/* Removed mb-4 */}
+          <Magic className="mr-2 h-4 w-4 shrink-0" />
+          思考中
+          <div className="ml-2 mt-1">
+            <CrazySpinner />
+          </div>
+        </div>
+      )}
+      {/* Tool Buttons Area (Hide when loading or showing completion) */}
+      {!isLoading && !hasCompletion && (
+        <div className="flex flex-wrap justify-center">
+          {" "}
+          {/* Removed temp border */} {/* Removed mb-4 */}
+          {aiTools.map((tool) => (
+            <button
+              type="button"
+              key={tool.name}
+              onClick={() => tool.option && handleToolClick(tool.option)}
+              disabled={!tool.option || isLoading}
+              className="flex flex-col items-center mx-1.5 my-1 p-2 rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+              title={tool.name}
+            >
+              <tool.icon className="h-6 w-6 text-blue-500" />
+              <span className="text-xs text-muted-foreground mt-1.5 text-center overflow-hidden text-ellipsis block whitespace-nowrap w-14">
+                {tool.name}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      {/* Custom Input Area (Hide when loading or showing completion) */}
+      {!isLoading && !hasCompletion && (
+        <div className="relative mb-12">
+          {" "}
+          {/* Removed negative bottom margin */}
+          {/* Replace CommandInput with a standard input */}
+          <CommandInput
+            value={inputValue}
+            onValueChange={setInputValue} // Use onValueChange for CommandInput
+            placeholder={hasCompletion ? "基于结果继续提问..." : "编辑或生成..."}
+            disabled={isLoading}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                handleCustomSubmit();
+              }
+            }}
+            // CommandInput typically handles its own styling, but we can add some if needed
+            // className="..."
+          />
+          <Button
+            size="icon"
+            className="absolute right-2 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-purple-500 hover:bg-purple-900"
+            onClick={handleCustomSubmit}
+          >
+            <ArrowUp className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+    </Command>
   );
 }

@@ -54,7 +54,7 @@ const TailwindAdvancedEditor = ({
   //   const [openNode, setOpenNode] = useState(false);
   //   const [openColor, setOpenColor] = useState(false);
   //   const [openLink, setOpenLink] = useState(false);
-  const [openAI, setOpenAI] = useState(false);
+  const [editorInstance, setEditorInstance] = useState<EditorInstance | null>(null); // State to hold editor instance
 
   //Apply Codeblock Highlighting on the HTML from editor.getHTML()
   const highlightCodeblocks = (content: string) => {
@@ -116,10 +116,15 @@ const TailwindAdvancedEditor = ({
           },
         }}
         onUpdate={({ editor }) => {
+          setEditorInstance(editor); // Store editor instance on update
+
           // Notify parent immediately that content is changing and potentially unsaved
           onSaveStatusChange?.("Unsaved");
           debouncedUpdates(editor);
           // setSaveStatus("Unsaved"); // Use prop callback instead
+        }}
+        onCreate={({ editor }) => {
+          setEditorInstance(editor); // Store editor instance on creation
         }}
         slotAfter={<ImageResizer />}
       >
@@ -145,7 +150,11 @@ const TailwindAdvancedEditor = ({
           </EditorCommandList>
         </EditorCommand>
 
-        <GenerativeMenuSwitch open={openAI} onOpenChange={setOpenAI}>
+        {/* Pass open state and onOpenChange to GenerativeMenuSwitch */}
+        {/* Pass the new prop to GenerativeMenuSwitch */}
+        {/* Pass open state and onOpenChange to GenerativeMenuSwitch */}
+        {/* Pass the new prop to GenerativeMenuSwitch */}
+        <GenerativeMenuSwitch editor={editorInstance}>
           <Separator orientation="vertical" />
           {/* <NodeSelector open={openNode} onOpenChange={setOpenNode} /> */}
           {/* <Separator orientation="vertical" /> */}

@@ -1,38 +1,45 @@
-import { EditorBubble, removeAIHighlight, useEditor } from "novel";
-import { Fragment, type ReactNode, useEffect } from "react";
+import type { Editor as TiptapEditor } from "@tiptap/core";
+import { EditorBubble } from "novel";
+import { Fragment, type ReactNode, useState } from "react";
+import { AiToolboxDialogContent } from "../../dialogs/ai-toolbox-dialog";
 import { Button } from "../ui/button";
 import Magic from "../ui/icons/magic";
-import { AISelector } from "./ai-selector";
 
 interface GenerativeMenuSwitchProps {
   children: ReactNode;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  editor: TiptapEditor | null; // Add editor prop
 }
-const GenerativeMenuSwitch = ({ children, open, onOpenChange }: GenerativeMenuSwitchProps) => {
-  const { editor } = useEditor();
 
-  useEffect(() => {
-    if (!open) removeAIHighlight(editor);
-  }, [open]);
+const GenerativeMenuSwitch = ({ children, editor }: GenerativeMenuSwitchProps) => {
+  const [isOpen, setIsOpen] = useState(false); // State to control dialog visibility
+
   return (
-    <EditorBubble
-      tippyOptions={{
-        placement: open ? "bottom-start" : "top",
-        onHidden: () => {
-          onOpenChange(false);
-          editor.chain().unsetHighlight().run();
-        },
-      }}
-      className="flex w-fit max-w-[90vw] overflow-hidden rounded-md border border-muted bg-background shadow-xl"
-    >
-      {open && <AISelector open={open} onOpenChange={onOpenChange} />}
-      {!open && (
+    <Fragment>
+      {" "}
+      {/* Wrap in Fragment to include the dialog */}
+      <EditorBubble
+        tippyOptions={{
+          placement: "right", // Always show on top initially
+          onHidden: () => {
+            // Keep highlight removal for when the bubble hides naturally
+            editor?.chain().unsetHighlight().run();
+          },
+        }}
+        className="flex w-fit max-w-[90vw] overflow-hidden rounded-md border border-muted bg-background shadow-xl"
+      >
         <Fragment>
           <Button
             className="gap-1 rounded-none text-purple-500"
             variant="ghost"
-            onClick={() => onOpenChange(true)}
+            onClick={() => {
+              // Modify onClick to check editor and set isOpen
+              if (editor) {
+                setIsOpen(true);
+              } else {
+                console.warn("Editor instance not available yet.");
+                // Optionally, add a toast notification here
+              }
+            }}
             size="sm"
           >
             <Magic className="h-5 w-5" />
@@ -40,8 +47,13 @@ const GenerativeMenuSwitch = ({ children, open, onOpenChange }: GenerativeMenuSw
           </Button>
           {children}
         </Fragment>
-      )}
-    </EditorBubble>
+      </EditorBubble>
+      {/* Conditionally render the AI Toolbox Dialog */}
+      {isOpen &&
+        editor && ( // Render dialog if isOpen and editor are available
+          <AiToolboxDialogContent editor={editor} onClose={() => setIsOpen(false)} />
+        )}
+    </Fragment>
   );
 };
 

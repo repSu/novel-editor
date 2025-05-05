@@ -1,15 +1,17 @@
+import type { Editor as TiptapEditor } from "@tiptap/core"; // Import Editor type
 import { Check, TextQuote, TrashIcon } from "lucide-react";
-import { useEditor } from "novel";
 import { CommandGroup, CommandItem, CommandSeparator } from "../ui/command";
 
 const AICompletionCommands = ({
   completion,
   onDiscard,
+  editor, // Add editor prop
 }: {
   completion: string;
   onDiscard: () => void;
+  editor: TiptapEditor; // Define editor prop type
 }) => {
-  const { editor } = useEditor();
+  // Remove useEditor() hook
   return (
     <>
       <CommandGroup>
