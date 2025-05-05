@@ -1,10 +1,10 @@
 "use client";
 
-import { type Dispatch, type ReactNode, type SetStateAction, createContext } from "react";
-import { ThemeProvider, useTheme } from "next-themes";
-import { Toaster } from "sonner";
-import { Analytics } from "@vercel/analytics/react";
 import useLocalStorage from "@/hooks/use-local-storage";
+import { Analytics } from "@vercel/analytics/react";
+import { ThemeProvider, useTheme } from "next-themes";
+import { type Dispatch, type ReactNode, type SetStateAction, createContext } from "react";
+import { Toaster } from "sonner";
 
 export const AppContext = createContext<{
   font: string;
@@ -18,7 +18,17 @@ const ToasterProvider = () => {
   const { theme } = useTheme() as {
     theme: "light" | "dark" | "system";
   };
-  return <Toaster theme={theme} />;
+  return (
+    <Toaster
+      theme={theme}
+      toastOptions={{
+        className:
+          "text-center justify-center rounded-lg bg-black/80 text-white dark:bg-white/90 dark:text-black w-auto py-2",
+        descriptionClassName: "text-center",
+        unstyled: false,
+      }}
+    />
+  );
 };
 
 export default function Providers({ children }: { children: ReactNode }) {

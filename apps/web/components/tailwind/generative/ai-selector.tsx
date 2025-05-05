@@ -28,6 +28,11 @@ interface AISelectorProps {
 
 export function AISelector({ onOpenChange }: AISelectorProps) {
   const { editor } = useEditor();
+  if (!editor) {
+    toast.error("编辑器未初始化");
+    onOpenChange(false);
+    return null;
+  }
   const [inputValue, setInputValue] = useState("");
 
   const [completion, setCompletion] = useState("");
@@ -134,12 +139,22 @@ export function AISelector({ onOpenChange }: AISelectorProps) {
                     body: { option: "zap", command: inputValue },
                   }).then(() => setInputValue(""));
 
-                const slice = editor.state.selection.content();
-                const text = editor.storage.markdown.serializer.serialize(slice.content);
+                let text = "";
+                try {
+                  const slice = editor.state.selection.content();
+                  text = editor.storage.markdown.serializer.serialize(slice.content);
+                  if (!text) {
+                    toast.error("请先选中文本");
+                    return;
+                  }
 
-                complete(text, {
-                  body: { option: "zap", command: inputValue },
-                }).then(() => setInputValue(""));
+                  complete(text, {
+                    body: { option: "zap", command: inputValue },
+                  }).then(() => setInputValue(""));
+                } catch (error) {
+                  toast.error("获取选中内容失败");
+                  return;
+                }
               }}
             >
               <ArrowUp className="h-4 w-4" />
@@ -147,6 +162,7 @@ export function AISelector({ onOpenChange }: AISelectorProps) {
           </div>
           {hasCompletion ? (
             <AICompletionCommands
+              editor={editor}
               onDiscard={() => {
                 editor.chain().unsetHighlight().focus().run();
                 onOpenChange(false);

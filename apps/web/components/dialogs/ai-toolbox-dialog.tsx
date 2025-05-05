@@ -135,7 +135,8 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
       const slice = editor.state.selection.content();
       text = editor.storage.markdown.serializer.serialize(slice.content);
     } catch {
-      toast.error("未选择文本，无法获取前文内容");
+      // 弹框提示错误，并在toast里面打印editor
+      toast.error(`未选择文本，无法获取前文内容, editor: ${editor}, option: ${option}`);
       return;
     }
 
