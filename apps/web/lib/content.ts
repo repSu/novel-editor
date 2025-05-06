@@ -1,4 +1,9 @@
 export const defaultEditorContent = {
   type: "doc",
-  content: [],
+  content: [
+    {
+      type: "text",
+      text: "",
+    },
+  ],
 };

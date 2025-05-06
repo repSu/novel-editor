@@ -3,7 +3,7 @@
 import useLocalStorage from "@/hooks/use-local-storage";
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider, useTheme } from "next-themes";
-import { type Dispatch, type ReactNode, type SetStateAction, createContext } from "react";
+import { type Dispatch, type ReactNode, type SetStateAction, createContext, useEffect } from "react";
 import { Toaster } from "sonner";
 
 export const AppContext = createContext<{
@@ -33,6 +33,13 @@ const ToasterProvider = () => {
 
 export default function Providers({ children }: { children: ReactNode }) {
   const [font, setFont] = useLocalStorage<string>("novel__font", "Default");
+  const [fontSizeScale] = useLocalStorage<number>("novel__font-size-scale", 1);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.documentElement.style.setProperty("--font-size-scale-factor", fontSizeScale.toString());
+    }
+  }, [fontSizeScale]);
 
   return (
     <ThemeProvider attribute="class" enableSystem disableTransitionOnChange defaultTheme="system">

@@ -43,6 +43,10 @@
     --novel-highlight-orange: #faebdd;
     --novel-highlight-pink: #faf1f5;
     --novel-highlight-gray: #f1f1ef;
+
+    --editor-font-base-size: 16px;
+    --title-font-base-size: 18px; /* 假设标题基础字号为 18px */
+    --font-size-scale-factor: 1;
   }
 
   .dark {
@@ -93,8 +97,11 @@
   body {
     @apply bg-background text-foreground;
   }
-}
 
+  .page-main-title {
+    font-size: calc(var(--title-font-base-size) * var(--font-size-scale-factor));
+  }
+}
 
 pre {
   background: #0d0d0d;

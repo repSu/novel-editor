@@ -2,6 +2,7 @@
   padding: 0 !important;
   padding-top: 8px !important;
   border: none !important;
+  font-size: calc(var(--editor-font-base-size) * var(--font-size-scale-factor));
 }
 
 /* 强制中文段落缩进 */

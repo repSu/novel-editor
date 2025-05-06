@@ -118,7 +118,7 @@ export default function Page() {
         <div className="mb-2">
           <h1
             ref={titleRef}
-            className="text-2xl font-medium text-gray-800 outline-none"
+            className="font-medium text-gray-800 outline-none page-main-title"
             contentEditable
             suppressContentEditableWarning
             onInput={(e) => {
