@@ -1,36 +1,21 @@
 "use client";
 
 import useLocalStorage from "@/hooks/use-local-storage";
+import { APP_THEME_COLORS } from "@/lib/theme-config"; // Import shared config
 import { ChevronRight, Moon, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 // Define props type
 interface SettingsDialogContentProps {
   onClose: () => void;
 }
 
-// Placeholder for color options
-const backgroundColors = [
-  { value: "white", style: "bg-white border" },
-  { value: "beige", style: "bg-yellow-50" },
-  { value: "green", style: "bg-green-50" },
-  { value: "blue", style: "bg-blue-50" },
-  { value: "dark", style: "bg-gray-800" },
-];
-
 export function SettingsDialogContent({ onClose }: SettingsDialogContentProps) {
   // Settings state
   const [fontSizeScale, setFontSizeScale] = useLocalStorage<number>("novel__font-size-scale", 1);
-  const [selectedBg, setSelectedBg] = useState("white");
+  const [selectedBg, setSelectedBg] = useLocalStorage<string>("novel__background-color", "white");
   const [customTitleStyle, setCustomTitleStyle] = useState(true);
   const [screenAlwaysOn, setScreenAlwaysOn] = useState(false);
-
-  useEffect(() => {
-    // Ensure the code runs only in the client-side
-    if (typeof window !== "undefined") {
-      document.documentElement.style.setProperty("--font-size-scale-factor", fontSizeScale.toString());
-    }
-  }, [fontSizeScale]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 w-full flex flex-col p-4 bg-gray-50 rounded-t-lg shadow-lg z-20 border-t border-gray-200">
@@ -67,17 +52,17 @@ export function SettingsDialogContent({ onClose }: SettingsDialogContentProps) {
         <div className="space-y-2">
           <span className="text-sm font-medium text-gray-700">背景</span>
           <div className="flex justify-between items-center space-x-2">
-            {backgroundColors.map((color) => (
+            {APP_THEME_COLORS.map((themeColor) => (
               <button
                 type="button"
-                key={color.value}
-                onClick={() => setSelectedBg(color.value)}
+                key={themeColor.value}
+                onClick={() => setSelectedBg(themeColor.value)}
                 className={`h-8 w-8 rounded-full border-2 ${
-                  selectedBg === color.value ? "border-orange-500" : "border-transparent"
-                } ${color.style} flex items-center justify-center`}
-                aria-label={`Set background to ${color.value}`}
+                  selectedBg === themeColor.value ? "border-orange-500" : "border-transparent"
+                } ${themeColor.previewStyle} flex items-center justify-center`}
+                aria-label={`Set background to ${themeColor.name || themeColor.value}`}
               >
-                {color.value === "dark" && <Moon className="h-4 w-4 text-white" />}
+                {themeColor.value === "dark" && <Moon className="h-4 w-4 text-white" />}
               </button>
             ))}
           </div>

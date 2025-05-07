@@ -1,13 +1,12 @@
 "use client";
-import { copyToClipboard } from "@/lib/utils"; // Import copyToClipboard
-// Import Editor type directly from @tiptap/core
+import { copyToClipboard } from "@/lib/utils";
 import type { Editor as TiptapEditor } from "@tiptap/core";
-// Combine all lucide-react imports and add missing ones, including Magic
 import {
   ArrowDownWideNarrow,
   ArrowUp,
   BookOpen,
   CheckCheck,
+  Copy,
   Edit,
   Feather,
   Globe,
@@ -16,20 +15,16 @@ import {
   Smile,
   X,
 } from "lucide-react";
-import { Copy } from "lucide-react"; // Import Copy icon
-import { addAIHighlight, getPrevText } from "novel"; // Import helpers from novel
-import { useRef, useState } from "react"; // Import hooks
-import Markdown from "react-markdown"; // Import Markdown renderer
-import { toast } from "sonner"; // Import toast notifications
-import { Button } from "../tailwind/ui/button"; // Import Button
-import { Command } from "../tailwind/ui/command"; // Import Command
-import { CommandInput } from "../tailwind/ui/command"; // Import CommandInput
-import CrazySpinner from "../tailwind/ui/icons/crazy-spinner"; // Import Spinner
-import Magic from "../tailwind/ui/icons/magic"; // Import the local Magic component
-import { ScrollArea } from "../tailwind/ui/scroll-area"; // Import ScrollArea
+import { addAIHighlight, getPrevText } from "novel";
+import { useRef, useState } from "react";
+import Markdown from "react-markdown";
+import { toast } from "sonner";
+import { Button } from "../tailwind/ui/button";
+import { Command, CommandInput } from "../tailwind/ui/command";
+import CrazySpinner from "../tailwind/ui/icons/crazy-spinner";
+import Magic from "../tailwind/ui/icons/magic";
+import { ScrollArea } from "../tailwind/ui/scroll-area";
 
-// Define the AI tools data
-// Map AI Selector commands to dialog tools where applicable
 const aiTools = [
   { name: "扩写", icon: PencilLine, option: "longer" },
   { name: "润色", icon: PencilRuler, option: "improve" },
@@ -116,10 +111,17 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
       }
     } catch (err) {
       // Use default catch or 'unknown' and check type
-      const error = err as Error; // Type assertion or check instanceof Error
-      if (error.name !== "AbortError") {
-        console.error("AI request failed:", error);
-        toast.error(`AI请求失败: ${error.message}`);
+      if (err instanceof Error) {
+        // Type assertion or check instanceof Error
+        if (err.name !== "AbortError") {
+          console.error("AI request failed:", err);
+          toast.error(`AI请求失败: ${err.message}`);
+          editor.chain().unsetHighlight().run(); // Remove highlight on error
+        }
+      } else {
+        // Handle non-Error types or cases where err is not an Error instance
+        console.error("AI request failed with unknown error type:", err);
+        toast.error("AI请求发生未知错误");
         editor.chain().unsetHighlight().run(); // Remove highlight on error
       }
     } finally {

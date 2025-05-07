@@ -41,6 +41,7 @@ export default function Page() {
   const [isTypoCheckOpen, setIsTypoCheckOpen] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [displayTitle, setDisplayTitle] = useState("第1章 请输入标题");
+
   const editorRef = useRef<{ getEditor: () => EditorInstance | null }>(null);
 
   const saveTitle = (newTitle: string) => {
@@ -101,7 +102,7 @@ export default function Page() {
             </Button>
           </div>
 
-          <Button variant="ghost" className="text-orange-500 font-semibold">
+          <Button variant="ghost" className="text-orange-300 font-semibold">
             下一步
           </Button>
         </div>
@@ -118,7 +119,7 @@ export default function Page() {
         <div className="mb-2">
           <h1
             ref={titleRef}
-            className="font-medium text-gray-800 outline-none page-main-title"
+            className="font-medium outline-none page-main-title"
             contentEditable
             suppressContentEditableWarning
             onInput={(e) => {
@@ -144,7 +145,7 @@ export default function Page() {
         </div>
       </main>
 
-      <footer className="flex h-16 items-center justify-center border-t bg-white p-4 sticky bottom-0 z-10">
+      <footer className="flex h-16 items-center justify-center p-4 sticky bottom-0 z-10 border-t">
         <Button
           className="rounded-full bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 px-6 py-2 text-white shadow-md hover:shadow-lg transition-shadow"
           onClick={() => setIsAiToolboxOpen(true)}
