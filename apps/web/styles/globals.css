@@ -169,3 +169,30 @@ pre {
     font-weight: 700;
   }
 }
+
+/* Styles for Firefox */
+.custom-slider-thumb::-moz-range-thumb {
+  width: 30px;
+  height: 30px;
+  background-color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Styles for Webkit browsers (Chrome, Safari, Edge) */
+.custom-slider-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Override default look */
+  appearance: none;
+  margin-top: 0px; /* Adjust vertical alignment for Webkit */
+  /* This value often needs to be negative half the difference
+                        between thumb height and track height, approximately. */
+  width: 30px;
+  height: 30px;
+  background-color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}

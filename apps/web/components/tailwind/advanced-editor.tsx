@@ -20,20 +20,19 @@ import type { ForwardedRef } from "react";
 import { useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { defaultExtensions } from "./extensions";
+import { uploadFn } from "./image-upload";
+
+import { slashCommand, suggestionItems } from "./slash-command";
+
+import hljs from "highlight.js";
 
 // import { ColorSelector } from "./selectors/color-selector";
 // import { LinkSelector } from "./selectors/link-selector";
 // import { MathSelector } from "./selectors/math-selector";
 // import { NodeSelector } from "./selectors/node-selector";
 // import { TextButtons } from "./selectors/text-buttons";
-import { Separator } from "./ui/separator";
-
-import GenerativeMenuSwitch from "./generative/generative-menu-switch";
-import { uploadFn } from "./image-upload";
-
-import { slashCommand, suggestionItems } from "./slash-command";
-
-const hljs = require("highlight.js");
+// import GenerativeMenuSwitch from "./generative/generative-menu-switch";
+// import { Separator } from "./ui/separator";
 
 const extensions = [...defaultExtensions, slashCommand];
 
@@ -66,9 +65,8 @@ const TailwindAdvancedEditor = forwardRef<EditorHandle, TailwindAdvancedEditorPr
     const highlightCodeblocks = (content: string) => {
       const doc = new DOMParser().parseFromString(content, "text/html");
       doc.querySelectorAll("pre code").forEach((el) => {
-        // @ts-ignore
         // https://highlightjs.readthedocs.io/en/latest/api.html?highlight=highlightElement#highlightelement
-        hljs.highlightElement(el);
+        hljs.highlightElement(el as HTMLElement);
       });
       return new XMLSerializer().serializeToString(doc);
     };
@@ -167,18 +165,18 @@ const TailwindAdvancedEditor = forwardRef<EditorHandle, TailwindAdvancedEditorPr
           {/* Pass the new prop to GenerativeMenuSwitch */}
           {/* Pass open state and onOpenChange to GenerativeMenuSwitch */}
           {/* Pass the new prop to GenerativeMenuSwitch */}
-          <GenerativeMenuSwitch editor={editorInstance}>
-            <Separator orientation="vertical" />
-            {/* <NodeSelector open={openNode} onOpenChange={setOpenNode} /> */}
-            {/* <Separator orientation="vertical" /> */}
-            {/* <LinkSelector open={openLink} onOpenChange={setOpenLink} /> */}
-            {/* <Separator orientation="vertical" /> */}
-            {/* <MathSelector /> */}
-            {/* <Separator orientation="vertical" /> */}
-            {/* <TextButtons /> */}
-            {/* <Separator orientation="vertical" /> */}
-            {/* <ColorSelector open={openColor} onOpenChange={setOpenColor} /> */}
-          </GenerativeMenuSwitch>
+          {/* <GenerativeMenuSwitch editor={editorInstance}> */}
+          {/* <Separator orientation="vertical" /> */}
+          {/* <NodeSelector open={openNode} onOpenChange={setOpenNode} /> */}
+          {/* <Separator orientation="vertical" /> */}
+          {/* <LinkSelector open={openLink} onOpenChange={setOpenLink} /> */}
+          {/* <Separator orientation="vertical" /> */}
+          {/* <MathSelector /> */}
+          {/* <Separator orientation="vertical" /> */}
+          {/* <TextButtons /> */}
+          {/* <Separator orientation="vertical" /> */}
+          {/* <ColorSelector open={openColor} onOpenChange={setOpenColor} /> */}
+          {/* </GenerativeMenuSwitch> */}
         </EditorContent>
       </EditorRoot>
     );

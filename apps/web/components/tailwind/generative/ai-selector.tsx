@@ -151,7 +151,7 @@ export function AISelector({ onOpenChange }: AISelectorProps) {
                   complete(text, {
                     body: { option: "zap", command: inputValue },
                   }).then(() => setInputValue(""));
-                } catch (error) {
+                } catch (_error) {
                   toast.error("获取选中内容失败");
                   return;
                 }

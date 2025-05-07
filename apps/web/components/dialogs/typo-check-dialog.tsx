@@ -1,5 +1,7 @@
 "use client";
 
+import useLocalStorage from "@/hooks/use-local-storage";
+import { APP_THEME_COLORS } from "@/lib/theme-config";
 // Removed: import { DialogTitle } from "@radix-ui/react-dialog";
 // import { Label } from "@/components/tailwind/ui/label"; // Commented out - Component likely missing
 // import { RadioGroup, RadioGroupItem } from "@/components/tailwind/ui/radio-group"; // Commented out - Component likely missing
@@ -31,8 +33,11 @@ interface TypoCheckDialogContentProps {
 }
 
 export function TypoCheckDialogContent({ onClose }: TypoCheckDialogContentProps) {
+  const [selectedBg] = useLocalStorage<string>("novel__background-color", "white");
   return (
-    <div className="fixed bottom-0 left-0 right-0 w-full flex flex-col p-4 bg-gray-50 rounded-t-lg shadow-lg z-20 border-t border-gray-200">
+    <div
+      className={`fixed bottom-0 left-0 right-0 w-full flex flex-col p-4 rounded-t-lg shadow-lg z-20 border-t ${selectedBg === "dark" ? "border-gray-600" : "border-gray-200"} ${APP_THEME_COLORS.find((tc) => tc.value === selectedBg)?.applyClass || "bg-white"}`}
+    >
       {/* Header with Close Button */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold text-gray-800">
@@ -44,7 +49,7 @@ export function TypoCheckDialogContent({ onClose }: TypoCheckDialogContentProps)
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
+      <div className="flex flex-1 flex-col items-center justify-center text-center bg-white/90 rounded-lg p-4">
         <EmptyBoxIllustration />
         <p className="text-gray-500">暂无错别字</p>
       </div>
