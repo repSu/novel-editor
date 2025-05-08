@@ -1,5 +1,6 @@
 "use client";
-import { ChevronLeft, Cloud, List, Settings, SpellCheck } from "lucide-react";
+import { copyToClipboard } from "@/lib/utils";
+import { ChevronLeft, Cloud, Copy, List, Redo, Settings, Sparkles, SpellCheck, Undo } from "lucide-react";
 import type { EditorInstance } from "novel";
 import { useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
@@ -146,12 +147,60 @@ export default function Page() {
       </main>
 
       <footer className="flex h-16 items-center justify-center p-4 sticky bottom-0 z-10 border-t">
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => editorRef.current?.getEditor()?.commands.undo()}
+            className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+          >
+            <Undo className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => editorRef.current?.getEditor()?.commands.redo()}
+            className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+          >
+            <Redo className="h-5 w-5" />
+          </Button>
+        </div>
+
         <Button
-          className="rounded-full bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 px-6 py-2 text-white shadow-md hover:shadow-lg transition-shadow"
+          className="flex items-center rounded-full bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 px-5 py-2.5 text-white shadow-md hover:shadow-lg transition-shadow"
           onClick={() => setIsAiToolboxOpen(true)}
         >
-          <span className="mr-2">✨</span> AI工具箱
+          <Sparkles className="h-4 w-2.5" /> AI工具箱
         </Button>
+
+        {/* Helper function to handle copying content to clipboard */}
+        {(() => {
+          const handleCopyContent = () => {
+            const title = titleRef.current?.textContent || "";
+            let content = editorRef.current?.getEditor()?.getText() || "";
+
+            // Replace multiple newlines with a single newline
+            content = content.replace(/\n+/g, "\n");
+
+            // Construct the text to copy
+            // If title exists, add a newline between title and content.
+            // If content is empty or starts with a newline, this handles it gracefully.
+            const textToCopy = title ? `${title.trim()}\n${content.trim()}` : content.trim();
+
+            copyToClipboard(textToCopy);
+          };
+
+          return (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopyContent}
+              className="ml-2 h-8 w-16 flex items-center border-slate-300 hover:bg-slate-100 text-slate-600"
+            >
+              <Copy className="h-4 w-2.5" /> 复制
+            </Button>
+          );
+        })()}
       </footer>
 
       {isAiToolboxOpen && (
