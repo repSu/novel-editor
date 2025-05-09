@@ -40,7 +40,24 @@ export async function POST(req: Request): Promise<Response> {
     }
   }
 
-  const { prompt, option, command } = await req.json();
+  let { prompt, option, command } = await req.json();
+  // For 'continue' option, if command is empty, use default. Otherwise, use provided command.
+  // For other options, if command is empty, it might be intentional or handled by the specific prompt.
+  if (option === "continue") {
+    if (!command || command.trim() === "") {
+      command = "请自由创作。";
+    }
+  } else if (command === "") {
+    // For 'zap' or other commands, an empty command might need a default or be an error.
+    // For now, let's assume 'zap' might also need a default if empty, or this can be refined.
+    // If other options never expect an empty command, this could be an error.
+    // For simplicity, let's give 'zap' a default if its command is empty.
+    if (option === "zap" && (!command || command.trim() === "")) {
+      command = "请自由创作。"; // Or a more specific default for zap
+    }
+    // For other options like 'improve', 'shorter', etc., 'command' is not typically used in the same way.
+  }
+
   const messages: OpenAI.ChatCompletionMessageParam[] = match(option)
     .with("continue", () => [
       {
@@ -49,7 +66,7 @@ export async function POST(req: Request): Promise<Response> {
       } as OpenAI.ChatCompletionSystemMessageParam,
       {
         role: "user",
-        content: getPrompt("USER_EXISTING", { text: prompt }),
+        content: getPrompt("USER_CONTINUE", { text: prompt, command: command }),
       } as OpenAI.ChatCompletionUserMessageParam,
     ])
     .with("improve", () => [
