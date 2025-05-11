@@ -27,7 +27,8 @@ const PlaceholderExtension = Placeholder.configure({
     if (node.type.name === "heading") {
       return `${node.attrs.level}级标题`;
     }
-    return "输入 '/' 调出命令";
+    // return "输入 '/' 调出命令";
+    return "没有思路，试试AI工具箱的续写功能。";
   },
   includeChildren: true,
 });

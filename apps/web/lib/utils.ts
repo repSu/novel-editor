@@ -32,3 +32,7 @@ export async function copyToClipboard(text: string): Promise<void> {
     selectTextFallback(text);
   }
 }
+
+export const toastUnavailable = () => {
+  toast.error("当前区域以后再来探索吧>.<");
+};

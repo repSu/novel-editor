@@ -11,7 +11,7 @@ import {
   Copy,
   Edit,
   Feather,
-  Globe,
+  //   Globe,
   PencilLine,
   PencilRuler,
   Smile,
@@ -38,7 +38,7 @@ const aiTools = [
   { name: "AI起名", icon: Smile },
   { name: "卡文锦囊", icon: Feather },
   { name: "开书灵感", icon: BookOpen },
-  { name: "AI助手", icon: Globe }, // This could potentially be the 'zap' command trigger? Or a general chat?
+  //   { name: "AI助手", icon: Globe }, // This could potentially be the 'zap' command trigger? Or a general chat?
 ];
 
 // Define props type
@@ -198,10 +198,6 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
   };
 
   const handleContinueSubmit = () => {
-    if (!continuationInputValue.trim()) {
-      toast.error("请输入后续剧情");
-      return;
-    }
     complete(contextForContinue, {
       body: { option: "continue", command: continuationInputValue },
     });
@@ -384,7 +380,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
             size="icon"
             className="absolute right-2 top-2 h-6 w-6 rounded-full bg-purple-500 hover:bg-purple-900" // Adjusted top position for textarea
             onClick={handleContinueSubmit}
-            disabled={isLoading || !continuationInputValue.trim()}
+            disabled={isLoading}
           >
             <ArrowUp className="h-4 w-4" />
           </Button>
@@ -420,7 +416,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
           <CommandInput
             value={inputValue}
             onValueChange={setInputValue}
-            placeholder={hasCompletion ? "基于结果继续提问..." : "请输入你的问题..."}
+            placeholder={hasCompletion ? "基于结果继续提问..." : "请输入你想咨询的问题..."}
             disabled={isLoading}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.nativeEvent.isComposing) {

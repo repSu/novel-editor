@@ -2,6 +2,7 @@
 
 import useLocalStorage from "@/hooks/use-local-storage";
 import { APP_THEME_COLORS } from "@/lib/theme-config"; // Import shared config
+import { toastUnavailable } from "@/lib/utils";
 import { ChevronRight, Moon, X } from "lucide-react";
 import { useState } from "react";
 
@@ -43,7 +44,7 @@ export function SettingsDialogContent({ onClose }: SettingsDialogContentProps) {
           <button
             type="button"
             onClick={onClose}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition-colors
+            className={`absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition-colors
               ${selectedBg === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"}
             `}
             aria-label="Close"
@@ -115,6 +116,7 @@ export function SettingsDialogContent({ onClose }: SettingsDialogContentProps) {
           {/* History Card */}
           <button
             type="button"
+            onClick={toastUnavailable}
             className={`flex w-full items-center justify-between p-4 rounded-lg transition-colors
               ${selectedBg === "dark" ? "bg-gray-700 hover:bg-gray-600/70" : "bg-white shadow-sm hover:bg-gray-50"}
             `}
@@ -133,9 +135,9 @@ export function SettingsDialogContent({ onClose }: SettingsDialogContentProps) {
                 自定义标题样式
               </span>
               <div
-                onClick={() => setCustomTitleStyle(!customTitleStyle)}
+                onClick={toastUnavailable}
                 onKeyUp={(e) => {
-                  if (e.key === "Enter" || e.key === " ") setCustomTitleStyle(!customTitleStyle);
+                  if (e.key === "Enter" || e.key === " ") toastUnavailable();
                 }}
                 role="switch"
                 aria-checked={customTitleStyle}
@@ -158,9 +160,9 @@ export function SettingsDialogContent({ onClose }: SettingsDialogContentProps) {
                 屏幕常亮
               </span>
               <div
-                onClick={() => setScreenAlwaysOn(!screenAlwaysOn)}
+                onClick={toastUnavailable}
                 onKeyUp={(e) => {
-                  if (e.key === "Enter" || e.key === " ") setScreenAlwaysOn(!screenAlwaysOn);
+                  if (e.key === "Enter" || e.key === " ") toastUnavailable();
                 }}
                 role="switch"
                 aria-checked={screenAlwaysOn}

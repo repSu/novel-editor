@@ -1,5 +1,5 @@
 "use client";
-import { copyToClipboard } from "@/lib/utils";
+import { copyToClipboard, toastUnavailable } from "@/lib/utils";
 import { ChevronLeft, Cloud, Copy, List, Redo, Settings, Sparkles, SpellCheck, Undo } from "lucide-react";
 import type { EditorInstance } from "novel";
 import { useEffect, useRef, useState } from "react";
@@ -41,25 +41,47 @@ const SaveStatus = ({
 export default function Page() {
   const [isTypoCheckOpen, setIsTypoCheckOpen] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const [displayTitle, setDisplayTitle] = useState("第1章 请输入标题");
+  const [displayTitle, setDisplayTitle] = useState(""); // Initialize with empty string
 
   const editorRef = useRef<{ getEditor: () => EditorInstance | null }>(null);
 
   const saveTitle = (newTitle: string) => {
-    window.localStorage.setItem("novel-title", newTitle);
+    const titleToSave = newTitle.trim(); // Trim whitespace
+    window.localStorage.setItem("novel-title", titleToSave);
     setSaveStatus("saved");
+    // If the title becomes empty, ensure the h1's innerHTML is also cleared
+    // to help with CSS :empty selector, and update displayTitle state.
+    if (titleRef.current && titleToSave === "") {
+      titleRef.current.innerHTML = "";
+    }
+    // Keep the displayTitle state consistent with what's being saved.
+    // This ensures that if the user clears the title, the state reflects that,
+    // allowing the :empty CSS pseudo-class to potentially work.
+    setDisplayTitle(titleToSave);
   };
 
   const debouncedTitleUpdate = useDebouncedCallback(saveTitle, 500);
 
+  // Helper to update placeholder class based on title content
+  const updatePlaceholderVisibility = (element: HTMLElement | null, title: string) => {
+    if (element) {
+      if (title.trim() === "") {
+        element.classList.add("title-is-empty");
+      } else {
+        element.classList.remove("title-is-empty");
+      }
+    }
+  };
+
   useEffect(() => {
     const savedTitle = window.localStorage.getItem("novel-title");
-    if (savedTitle) {
-      if (titleRef.current) {
-        titleRef.current.textContent = savedTitle;
-      }
-      setDisplayTitle(savedTitle);
+    const initialTitle = savedTitle || "";
+
+    if (titleRef.current) {
+      titleRef.current.textContent = initialTitle;
     }
+    setDisplayTitle(initialTitle);
+    updatePlaceholderVisibility(titleRef.current, initialTitle); // Set initial class
 
     const timer = setTimeout(() => {
       const content = window.localStorage.getItem("novel-text-length");
@@ -81,29 +103,31 @@ export default function Page() {
     <div className="flex h-screen flex-col bg-gray-50">
       <header className="sticky top-0 z-10">
         <div className="flex h-14 items-center justify-between px-4">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={toastUnavailable}>
             <ChevronLeft className="h-6 w-6" />
           </Button>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setIsTypoCheckOpen(true)}>
-              <SpellCheck className="h-5 w-5 text-gray-600" />
-            </Button>
-
             <Button variant="ghost" size="icon" onClick={() => setIsSettingsOpen(true)}>
               <Settings className="h-5 w-5 text-gray-600" />
             </Button>
 
-            <Button variant="ghost" size="icon" onClick={() => setIsOutlineOpen(true)}>
+            {/* <Button variant="ghost" size="icon" onClick={() => setIsTypoCheckOpen(true)}> */}
+            <Button variant="ghost" size="icon" onClick={() => toastUnavailable()}>
+              <SpellCheck className="h-5 w-5 text-gray-600" />
+            </Button>
+
+            {/* <Button variant="ghost" size="icon" onClick={() => setIsOutlineOpen(true)}> */}
+            <Button variant="ghost" size="icon" onClick={() => toastUnavailable()}>
               <List className="h-5 w-5 text-gray-600" />
             </Button>
 
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" onClick={toastUnavailable}>
               <Cloud className="h-5 w-5 text-gray-600" />
             </Button>
           </div>
 
-          <Button variant="ghost" className="text-orange-300 font-semibold">
+          <Button variant="ghost" className="text-orange-300 font-semibold" onClick={toastUnavailable}>
             下一步
           </Button>
         </div>
@@ -121,17 +145,24 @@ export default function Page() {
           <h1
             ref={titleRef}
             className="font-medium outline-none page-main-title"
+            data-placeholder="第1章 踏花归去马蹄香" // Added data-placeholder
             contentEditable
             suppressContentEditableWarning
             onInput={(e) => {
+              const currentText = e.currentTarget.textContent || "";
               setSaveStatus("saving");
-              debouncedTitleUpdate(e.currentTarget.textContent || "");
+              updatePlaceholderVisibility(e.currentTarget as HTMLElement, currentText);
+              debouncedTitleUpdate(currentText);
             }}
             onBlur={(e) => {
-              saveTitle(e.currentTarget.textContent || "");
+              const currentText = e.currentTarget.textContent || "";
+              updatePlaceholderVisibility(e.currentTarget as HTMLElement, currentText);
+              saveTitle(currentText); // Ensure save on blur
             }}
           >
-            {displayTitle}
+            {/* Content is primarily managed by textContent and contentEditable. */}
+            {/* displayTitle state is used for React's rendering cycle and consistency. */}
+            {/* Initial content is set by useEffect. */}
           </h1>
         </div>
 
@@ -146,8 +177,8 @@ export default function Page() {
         </div>
       </main>
 
-      <footer className="flex h-16 items-center justify-center p-4 sticky bottom-0 z-10 border-t">
-        <div className="flex items-center">
+      <footer className="flex h-auto items-center justify-center p-4 sticky bottom-0 z-10 border-t">
+        <div className="flex items-center mb-4">
           <Button
             variant="ghost"
             size="icon"
@@ -164,43 +195,43 @@ export default function Page() {
           >
             <Redo className="h-5 w-5" />
           </Button>
+
+          <Button
+            className="flex items-center rounded-full bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 px-5 py-2.5 text-white shadow-md hover:shadow-lg transition-shadow"
+            onClick={() => setIsAiToolboxOpen(true)}
+          >
+            <Sparkles className="h-4 w-2.5" /> AI工具箱
+          </Button>
+
+          {/* Helper function to handle copying content to clipboard */}
+          {(() => {
+            const handleCopyContent = () => {
+              const title = titleRef.current?.textContent || "";
+              let content = editorRef.current?.getEditor()?.getText() || "";
+
+              // Replace multiple newlines with a single newline
+              content = content.replace(/\n+/g, "\n");
+
+              // Construct the text to copy
+              // If title exists, add a newline between title and content.
+              // If content is empty or starts with a newline, this handles it gracefully.
+              const textToCopy = title ? `${title.trim()}\n${content.trim()}` : content.trim();
+
+              copyToClipboard(textToCopy);
+            };
+
+            return (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyContent}
+                className="ml-2 h-8 w-16 flex items-center border-slate-300 hover:bg-slate-100 text-slate-600"
+              >
+                <Copy className="h-4 w-2.5" /> 复制
+              </Button>
+            );
+          })()}
         </div>
-
-        <Button
-          className="flex items-center rounded-full bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 px-5 py-2.5 text-white shadow-md hover:shadow-lg transition-shadow"
-          onClick={() => setIsAiToolboxOpen(true)}
-        >
-          <Sparkles className="h-4 w-2.5" /> AI工具箱
-        </Button>
-
-        {/* Helper function to handle copying content to clipboard */}
-        {(() => {
-          const handleCopyContent = () => {
-            const title = titleRef.current?.textContent || "";
-            let content = editorRef.current?.getEditor()?.getText() || "";
-
-            // Replace multiple newlines with a single newline
-            content = content.replace(/\n+/g, "\n");
-
-            // Construct the text to copy
-            // If title exists, add a newline between title and content.
-            // If content is empty or starts with a newline, this handles it gracefully.
-            const textToCopy = title ? `${title.trim()}\n${content.trim()}` : content.trim();
-
-            copyToClipboard(textToCopy);
-          };
-
-          return (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCopyContent}
-              className="ml-2 h-8 w-16 flex items-center border-slate-300 hover:bg-slate-100 text-slate-600"
-            >
-              <Copy className="h-4 w-2.5" /> 复制
-            </Button>
-          );
-        })()}
       </footer>
 
       {isAiToolboxOpen && (

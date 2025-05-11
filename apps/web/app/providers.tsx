@@ -27,6 +27,7 @@ const ToasterProvider = () => {
           "text-center justify-center rounded-lg bg-black/80 text-white dark:bg-white/90 dark:text-black w-auto py-2",
         descriptionClassName: "text-center",
         unstyled: false,
+        duration: 1500, // Default toast duration: 3000ms (3 seconds)
       }}
     />
   );

@@ -101,6 +101,14 @@
   .page-main-title {
     font-size: calc(var(--title-font-base-size) * var(--font-size-scale-factor));
   }
+
+  /* Placeholder for contentEditable title in page.tsx (class-based) */
+  .page-main-title.title-is-empty[contentEditable="true"][data-placeholder]::before {
+    content: attr(data-placeholder);
+    color: #a0aec0; /* Tailwind gray-500, or your preferred placeholder color */
+    pointer-events: none; /* Ensure the placeholder text doesn't interfere with clicks */
+    display: block;
+  }
 }
 
 pre {

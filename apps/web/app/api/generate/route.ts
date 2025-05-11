@@ -45,7 +45,7 @@ export async function POST(req: Request): Promise<Response> {
   // For other options, if command is empty, it might be intentional or handled by the specific prompt.
   if (option === "continue") {
     if (!command || command.trim() === "") {
-      command = "请自由创作。";
+      command = "请结合前文内容继续创作。";
     }
   } else if (command === "") {
     // For 'zap' or other commands, an empty command might need a default or be an error.

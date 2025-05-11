@@ -2,10 +2,10 @@
 import { defaultEditorContent } from "@/lib/content";
 import type { Editor as EditorInstance, JSONContent } from "@tiptap/core";
 import {
-  EditorCommand,
-  EditorCommandEmpty,
-  EditorCommandItem,
-  EditorCommandList,
+  //   EditorCommand,
+  //   EditorCommandEmpty,
+  //   EditorCommandItem,
+  //   EditorCommandList,
   EditorContent,
   // type EditorInstance, <-- Removed from here
   EditorRoot,
@@ -22,7 +22,8 @@ import { useDebouncedCallback } from "use-debounce";
 import { defaultExtensions } from "./extensions";
 import { uploadFn } from "./image-upload";
 
-import { slashCommand, suggestionItems } from "./slash-command";
+// import { slashCommand, suggestionItems } from "./slash-command";
+import { slashCommand } from "./slash-command";
 
 import hljs from "highlight.js";
 
@@ -139,7 +140,7 @@ const TailwindAdvancedEditor = forwardRef<EditorHandle, TailwindAdvancedEditorPr
           }}
           slotAfter={<ImageResizer />}
         >
-          <EditorCommand className="z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all">
+          {/* <EditorCommand className="z-50 h-auto max-h-[330px] overflow-y-auto rounded-md border border-muted bg-background px-1 py-2 shadow-md transition-all">
             <EditorCommandEmpty className="px-2 text-muted-foreground">No results</EditorCommandEmpty>
             <EditorCommandList>
               {suggestionItems.map((item) => (
@@ -159,7 +160,7 @@ const TailwindAdvancedEditor = forwardRef<EditorHandle, TailwindAdvancedEditorPr
                 </EditorCommandItem>
               ))}
             </EditorCommandList>
-          </EditorCommand>
+          </EditorCommand> */}
 
           {/* Pass open state and onOpenChange to GenerativeMenuSwitch */}
           {/* Pass the new prop to GenerativeMenuSwitch */}
