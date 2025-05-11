@@ -61,6 +61,8 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
   const [isLoading, setIsLoading] = useState(false);
   const [isInputtingForContinue, setIsInputtingForContinue] = useState(false);
   const [contextForContinue, setContextForContinue] = useState("");
+  const [showPolishOptions, setShowPolishOptions] = useState(false); // New state for polish options
+  const [polishContextText, setPolishContextText] = useState(""); // Store text for polishing
   const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedBg] = useLocalStorage<string>("novel__background-color", "white");
 
@@ -141,6 +143,28 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
     let text = "";
     const { from, empty } = editor.state.selection;
 
+    if (option === "improve") {
+      if (empty) {
+        toast.error("请先选中文本以进行润色");
+        return;
+      }
+      try {
+        const slice = editor.state.selection.content();
+        text = editor.storage.markdown.serializer.serialize(slice.content);
+      } catch (e) {
+        toast.error("获取选中文本失败。");
+        return;
+      }
+      if (!text) {
+        toast.error("选中文本内容为空。");
+        return;
+      }
+      setPolishContextText(text);
+      setShowPolishOptions(true);
+      setCompletion(""); // Clear previous completion
+      return; // Don't call complete yet, show style options
+    }
+
     if (option === "continue") {
       // For "continue", we always get preceding text, selection is not mandatory for context.
       try {
@@ -197,6 +221,11 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
     complete(text, { body: { option } });
   };
 
+  const handlePolishSubmit = (style: string) => {
+    setShowPolishOptions(false);
+    complete(polishContextText, { body: { option: "improve", command: style } });
+  };
+
   const handleContinueSubmit = () => {
     complete(contextForContinue, {
       body: { option: "continue", command: continuationInputValue },
@@ -234,6 +263,8 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
     setContextForContinue("");
     setInputValue("");
     setCompletion(""); // Clear completion on close
+    setShowPolishOptions(false); // Clear polish options on close
+    setPolishContextText(""); // Clear polish context text
     editor.chain().unsetHighlight().run(); // Ensure highlight is removed
     onClose();
   };
@@ -244,6 +275,11 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
     // If discarding a continuation, allow re-input or go back
     // For now, just clears completion. If it was a continuation, the input field will reappear.
     // If it was a general tool, the tool buttons will reappear.
+    // If it was a polish, the polish options should reappear or go back to tools
+    if (polishContextText) {
+      // If polishContextText is set, it means we were in polish mode
+      setShowPolishOptions(true); // Re-show polish options
+    }
   };
 
   // Effect to clear continuation input when dialog is closed externally or completion is done
@@ -257,9 +293,78 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
     }
   }, [isLoading, hasCompletion, isInputtingForContinue]);
 
+  // Effect to adjust main content area padding when dialog is open
+  useEffect(() => {
+    const toolboxElement = document.querySelector(".ai-toolbox-command");
+    const mainContentArea = document.getElementById("main-content-area");
+
+    let originalPaddingBottom = "";
+
+    if (toolboxElement && mainContentArea) {
+      const toolboxHeight = toolboxElement.clientHeight;
+      originalPaddingBottom = mainContentArea.style.paddingBottom;
+      // Add a small buffer to the padding to ensure content is not cut off
+      mainContentArea.style.paddingBottom = `${toolboxHeight + 16}px`; // 16px buffer (p-4 default)
+
+      // Scroll the selection to the top of the main content area's viewport
+      if (editor?.state.selection && !editor.state.selection.empty) {
+        try {
+          const { from } = editor.state.selection;
+          // domAtPos gives the DOM node *after* the position. For the start of a selection,
+          // this should be the first node within or at the boundary of the selection.
+          const domRef = editor.view.domAtPos(from);
+
+          let elementToScroll = domRef.node;
+          // If it's a text node, get its parent element for scrolling,
+          // as scrollIntoView works on HTMLElements.
+          if (elementToScroll.nodeType === Node.TEXT_NODE) {
+            elementToScroll = elementToScroll.parentElement;
+          }
+
+          if (elementToScroll instanceof HTMLElement && mainContentArea.contains(elementToScroll)) {
+            // Calculate the scroll amount needed for mainContentArea
+            // to bring the top of elementToScroll to the top of mainContentArea's viewport.
+            const mainRect = mainContentArea.getBoundingClientRect();
+            const elementRect = elementToScroll.getBoundingClientRect();
+
+            // The desired scrollTop for mainContentArea is its current scrollTop
+            // plus the difference between the element's top and the main area's top.
+            const scrollOffset = elementRect.top - mainRect.top;
+            mainContentArea.scrollTop += scrollOffset;
+          } else {
+            // Fallback to Tiptap's default scrollIntoView if we couldn't get a proper HTMLElement
+            // or if the element is not contained within the main scrollable area (edge case).
+            editor.commands.scrollIntoView();
+          }
+        } catch (e) {
+          console.error("Error scrolling to selection:", e);
+          // Fallback if any error occurs during custom scroll logic
+          if (editor) {
+            // editor might be null if an error happened before its check
+            editor.commands.scrollIntoView();
+          }
+        }
+      }
+      // If no selection or selection is empty, no specific scroll action is taken here,
+      // allowing the editor to maintain its current scroll position relative to the new padding.
+    }
+
+    return () => {
+      if (mainContentArea) {
+        mainContentArea.style.paddingBottom = originalPaddingBottom;
+      }
+    };
+  }, []); // Runs once on mount and cleanup on unmount
+
+  const polishStyles = [
+    { name: "轻松明快", style: "lighthearted" },
+    { name: "严肃沉稳", style: "serious" },
+    { name: "添加修辞", style: "rhetorical" },
+  ];
+
   return (
     <Command
-      className={`fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full h-auto px-4 pt-4 pb-0 rounded-t-lg shadow-xl z-50 border ${
+      className={`ai-toolbox-command fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full h-auto px-4 pt-4 pb-0 rounded-t-lg shadow-xl z-50 border ${
         selectedBg === "dark" ? "border-gray-600" : "border-border"
       } ${APP_THEME_COLORS.find((tc) => tc.value === selectedBg)?.applyClass || "bg-white"}`}
     >
@@ -268,7 +373,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
         <div className="w-12">
           {" "}
           {/* Increased width for back button */}
-          {isInputtingForContinue && !isLoading && !hasCompletion && (
+          {(isInputtingForContinue || showPolishOptions) && !isLoading && !hasCompletion && (
             <Button
               variant="ghost"
               size="sm"
@@ -276,6 +381,8 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
                 setIsInputtingForContinue(false);
                 setContinuationInputValue("");
                 setContextForContinue("");
+                setShowPolishOptions(false);
+                setPolishContextText("");
               }}
               className="p-1 text-xs"
             >
@@ -284,7 +391,11 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
           )}
         </div>
         <h2 className="text-sm font-semibold text-foreground text-center">
-          {isInputtingForContinue && !isLoading && !hasCompletion ? "请输入后续剧情简述" : "AI工具箱"}
+          {isInputtingForContinue && !isLoading && !hasCompletion
+            ? "请输入后续剧情简述"
+            : showPolishOptions && !isLoading && !hasCompletion
+              ? "选择润色风格"
+              : "AI工具箱"}
         </h2>
         <button type="button" onClick={handleCloseDialog} className="p-1 rounded-full hover:bg-muted">
           <X className="h-5 w-5 text-muted-foreground" />
@@ -388,7 +499,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
       )}
 
       {/* Tool Buttons Area (Hide when loading, showing completion, or inputting for continue) */}
-      {!isLoading && !hasCompletion && !isInputtingForContinue && (
+      {!isLoading && !hasCompletion && !isInputtingForContinue && !showPolishOptions && (
         <div className="flex flex-wrap justify-center mb-4">
           {" "}
           {/* Added mb-4 for spacing before custom input */}
@@ -410,8 +521,25 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
         </div>
       )}
 
-      {/* Custom Input Area (Hide when loading, showing completion, or inputting for continue) */}
-      {!isLoading && !hasCompletion && !isInputtingForContinue && (
+      {/* Polish Style Options Area */}
+      {!isLoading && !hasCompletion && showPolishOptions && (
+        <div className="flex flex-wrap justify-center mb-4">
+          {polishStyles.map((style) => (
+            <Button
+              key={style.style}
+              variant="outline"
+              size="sm"
+              onClick={() => handlePolishSubmit(style.style)}
+              className="m-1"
+            >
+              {style.name}
+            </Button>
+          ))}
+        </div>
+      )}
+
+      {/* Custom Input Area (Hide when loading, showing completion, or inputting for continue or polish options) */}
+      {!isLoading && !hasCompletion && !isInputtingForContinue && !showPolishOptions && (
         <div className="relative mb-12">
           <CommandInput
             value={inputValue}

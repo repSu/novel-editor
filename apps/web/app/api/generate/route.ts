@@ -76,7 +76,7 @@ export async function POST(req: Request): Promise<Response> {
       } as OpenAI.ChatCompletionSystemMessageParam,
       {
         role: "user",
-        content: getPrompt("USER_EXISTING", { text: prompt }),
+        content: getPrompt("USER_IMPROVE", { text: prompt, command: command }),
       } as OpenAI.ChatCompletionUserMessageParam,
     ])
     .with("shorter", () => [

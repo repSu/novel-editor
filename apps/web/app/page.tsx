@@ -140,7 +140,7 @@ export default function Page() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4">
+      <main id="main-content-area" className="flex-1 overflow-y-auto p-4">
         <div className="mb-2">
           <h1
             ref={titleRef}
