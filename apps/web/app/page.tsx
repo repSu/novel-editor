@@ -1,8 +1,9 @@
 "use client";
 import { copyToClipboard, toastUnavailable } from "@/lib/utils";
-import { ChevronLeft, Cloud, Copy, List, Redo, Settings, Sparkles, SpellCheck, Undo } from "lucide-react";
+import { ChevronLeft, Cloud, Copy, List, Redo, Settings, Sparkles, SpellCheck, Trash2, Undo } from "lucide-react"; // Added Trash2
 import type { EditorInstance } from "novel";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner"; // Import toast
 import { useDebouncedCallback } from "use-debounce";
 
 import { AiToolboxDialogContent } from "@/components/dialogs/ai-toolbox-dialog";
@@ -98,6 +99,32 @@ export default function Page() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
   const [isAiToolboxOpen, setIsAiToolboxOpen] = useState(false);
+
+  const handleClearContent = () => {
+    // Add confirmation dialog
+    if (window.confirm("确定要清空所有内容吗？此操作将清除所有记录，若误触请点击取消。")) {
+      // Clear title
+      if (titleRef.current) {
+        titleRef.current.textContent = "";
+        saveTitle(""); // Save empty title and update state
+        updatePlaceholderVisibility(titleRef.current, ""); // Update placeholder visibility
+      }
+
+      // Clear editor content
+      const editor = editorRef.current?.getEditor();
+      if (editor) {
+        editor.commands.clearContent(true); // Clear content and trigger save/update
+        // clearContent(true) should trigger onUpdate -> saveContent -> onWordCountChange
+        // Manually set state for immediate UI feedback
+        setWordCount(0);
+        setSaveStatus("saved"); // Assume saved state after clearing
+        // Ensure local storage length is updated too
+        window.localStorage.setItem("novel-text-length", "0");
+      }
+      toast.error("内容已清空"); // Notify user
+    }
+    // If user cancels, do nothing.
+  };
 
   return (
     <div className="flex h-screen flex-col bg-gray-50">
@@ -231,6 +258,16 @@ export default function Page() {
               </Button>
             );
           })()}
+
+          {/* Clear Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClearContent}
+            className="ml-2 h-8 w-16 flex items-center border-slate-300 hover:bg-red-100 text-red-600 hover:border-red-400" // Adjusted style for clear action
+          >
+            <Trash2 className="h-4 w-2.5" /> 清空
+          </Button>
         </div>
       </footer>
 

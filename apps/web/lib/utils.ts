@@ -15,7 +15,7 @@ function selectTextFallback(text: string) {
   element.select();
   document.execCommand("copy");
   document.body.removeChild(element);
-  toast.info("已复制到剪贴板");
+  toast.success("已复制到剪贴板");
 }
 
 export async function copyToClipboard(text: string): Promise<void> {

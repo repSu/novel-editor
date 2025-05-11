@@ -29,7 +29,7 @@ import { ScrollArea } from "../tailwind/ui/scroll-area";
 
 const aiTools = [
   { name: "扩写", icon: PencilLine, option: "longer" },
-  { name: "润色", icon: PencilRuler, option: "improve" },
+  { name: "改写", icon: PencilRuler, option: "improve" },
   { name: "缩写", icon: ArrowDownWideNarrow, option: "shorter" }, // Add shorter
   { name: "纠错", icon: CheckCheck, option: "fix" }, // Add fix
   // { name: "自定义描写", icon: PenTool, option: "zap" }, // 'zap' will be handled by the input field
@@ -65,6 +65,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
   const [polishContextText, setPolishContextText] = useState(""); // Store text for polishing
   const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedBg] = useLocalStorage<string>("novel__background-color", "white");
+  const [customPolishStyle, setCustomPolishStyle] = useState(""); // State for custom polish style input
 
   const complete = async (text: string, options?: CompleteOptions) => {
     setIsLoading(true);
@@ -145,7 +146,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
 
     if (option === "improve") {
       if (empty) {
-        toast.error("请先选中文本以进行润色");
+        toast.error("请先选中文本以进行改写");
         return;
       }
       try {
@@ -234,6 +235,17 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
     // setContinuationInputValue(""); // Clear after successful submission or if user cancels
   };
 
+  const handleCustomPolishSubmit = () => {
+    if (!customPolishStyle.trim()) {
+      toast.error("请输入自定义改写风格");
+      return;
+    }
+    setShowPolishOptions(false); // Hide options after submission
+    complete(polishContextText, { body: { option: "improve", command: customPolishStyle } });
+    // Optionally clear the input after submission, or keep it if user might reuse
+    // setCustomPolishStyle("");
+  };
+
   const handleCustomSubmit = () => {
     const slice = editor.state.selection.content();
     const text = editor.storage.markdown.serializer.serialize(slice.content);
@@ -265,6 +277,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
     setCompletion(""); // Clear completion on close
     setShowPolishOptions(false); // Clear polish options on close
     setPolishContextText(""); // Clear polish context text
+    setCustomPolishStyle(""); // Clear custom polish style input
     editor.chain().unsetHighlight().run(); // Ensure highlight is removed
     onClose();
   };
@@ -357,9 +370,11 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
   }, []); // Runs once on mount and cleanup on unmount
 
   const polishStyles = [
-    { name: "轻松明快", style: "lighthearted" },
-    { name: "严肃沉稳", style: "serious" },
-    { name: "添加修辞", style: "rhetorical" },
+    { name: "前文风格", style: "延续前文的风格" },
+    { name: "轻松明快", style: "轻松明快" },
+    { name: "严肃沉稳", style: "严肃沉稳" },
+    { name: "丰富修辞", style: "多使用修辞手法" },
+    { name: "对话风格", style: "多使用对话" },
   ];
 
   return (
@@ -394,7 +409,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
           {isInputtingForContinue && !isLoading && !hasCompletion
             ? "请输入后续剧情简述"
             : showPolishOptions && !isLoading && !hasCompletion
-              ? "选择润色风格"
+              ? "选择改写风格"
               : "AI工具箱"}
         </h2>
         <button type="button" onClick={handleCloseDialog} className="p-1 rounded-full hover:bg-muted">
@@ -535,7 +550,35 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
               {style.name}
             </Button>
           ))}
-        </div>
+          {/* Custom Polish Style Input */}
+          <div className="mt-4 flex w-full items-center space-x-2">
+            {" "}
+            {/* Ensure full width */}
+            <input
+              type="text"
+              placeholder="或输入自定义风格..."
+              value={customPolishStyle}
+              onChange={(e) => setCustomPolishStyle(e.target.value)}
+              className="flex mb-8 h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 flex-1" // Basic input styling from Shadcn
+              onKeyDown={(e) => {
+                // Submit on Enter key press (if not Shift+Enter)
+                if (e.key === "Enter" && !e.shiftKey && customPolishStyle.trim()) {
+                  e.preventDefault(); // Prevent default Enter behavior (like newline in some contexts)
+                  handleCustomPolishSubmit();
+                }
+              }}
+              disabled={isLoading} // Disable input while loading
+            />
+            <Button
+              size="sm"
+              onClick={handleCustomPolishSubmit}
+              disabled={!customPolishStyle.trim() || isLoading} // Disable button if input is empty or loading
+              className="mb-8 bg-purple-500 hover:bg-purple-600 text-white px-4" // Added padding for better look
+            >
+              应用
+            </Button>
+          </div>
+        </div> // Close the container div started at line 541
       )}
 
       {/* Custom Input Area (Hide when loading, showing completion, or inputting for continue or polish options) */}
