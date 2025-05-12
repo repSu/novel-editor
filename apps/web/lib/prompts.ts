@@ -1,6 +1,6 @@
 export const PROMPT = {
   // 基础提示
-  BASE: "你的回答只提供最终内容，最终内容里每句话保持一个段落，双引号必须使用中文的正反双引号。不要使用表情符号，不要解释任何内容，不要透露你自己的任何信息。",
+  BASE: "你的回答只提供最终内容，并且每句话保持一个段落。双引号必须使用中文的正反双引号，不要使用表情符号，不要解释任何内容，不要透露你的任何信息。",
 
   // 系统提示
   CONTINUE:
@@ -29,5 +29,22 @@ export function getPrompt(type: keyof typeof PROMPT, params?: Record<string, str
       result = result.replace(new RegExp(`\\{${key}\\}`, "g"), value);
     });
   }
-  return type === "BASE" ? result : `${result} ${PROMPT.BASE}`;
+
+  // 只有系统提示需要添加BASE提示
+  const isSystemPrompt = ["CONTINUE", "IMPROVE", "SHORTER", "LONGER", "FIX", "ZAP", "GENERATE_TITLE"].includes(type);
+  const promptFinal = isSystemPrompt ? `${result}${PROMPT.BASE}` : result;
+  return promptFinal;
 }
+
+export type PolishStyle = {
+  name: string;
+  style: string;
+};
+
+export const POLISH_STYLES: PolishStyle[] = [
+  { name: "前文风格", style: "延续前文的风格" },
+  { name: "热门网文", style: "模仿热门网文作家或热门小说的写作风格，改写后需要在最后一行标明是模仿的哪位作者或者作品" },
+  { name: "言简意赅", style: "尽量用简洁有力，丰富传神的语言言简意赅的表达，不要丢失现有文本的细节" },
+  { name: "丰富修辞", style: "多使用修辞手法" },
+  { name: "对话风格", style: "多使用对话" },
+] as const;

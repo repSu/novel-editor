@@ -22,6 +22,7 @@ import { addAIHighlight, getPrevText } from "novel";
 import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { toast } from "sonner";
+import { POLISH_STYLES } from "../../lib/prompts";
 import { Button } from "../tailwind/ui/button";
 import { Command, CommandInput } from "../tailwind/ui/command";
 import CrazySpinner from "../tailwind/ui/icons/crazy-spinner";
@@ -398,14 +399,6 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
     };
   }, []); // Runs once on mount and cleanup on unmount
 
-  const polishStyles = [
-    { name: "前文风格", style: "延续前文的风格" },
-    { name: "轻松明快", style: "轻松明快" },
-    { name: "严肃沉稳", style: "严肃沉稳" },
-    { name: "丰富修辞", style: "多使用修辞手法" },
-    { name: "对话风格", style: "多使用对话" },
-  ];
-
   return (
     <Command
       className={`ai-toolbox-command fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full h-auto px-4 pt-4 pb-0 rounded-t-lg shadow-xl z-50 border ${
@@ -607,7 +600,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
       {/* Polish Style Options Area */}
       {!isLoading && !hasCompletion && showPolishOptions && (
         <div className="flex flex-wrap justify-center mb-4">
-          {polishStyles.map((style) => (
+          {POLISH_STYLES.map((style) => (
             <Button
               key={style.style}
               variant="outline"
