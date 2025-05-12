@@ -12,6 +12,7 @@ import {
   Edit,
   Feather,
   //   Globe,
+  Heading1, // Added Heading1 icon
   PencilLine,
   PencilRuler,
   Smile,
@@ -34,6 +35,7 @@ const aiTools = [
   { name: "纠错", icon: CheckCheck, option: "fix" }, // Add fix
   // { name: "自定义描写", icon: PenTool, option: "zap" }, // 'zap' will be handled by the input field
   { name: "续写", icon: Edit, option: "continue" }, // Map to 'continue'
+  { name: "生成标题", icon: Heading1, option: "generate_title" }, // Added Generate Title
   // Keep other tools for potential future implementation, but without 'option' for now
   { name: "AI起名", icon: Smile },
   { name: "卡文锦囊", icon: Feather },
@@ -63,6 +65,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
   const [contextForContinue, setContextForContinue] = useState("");
   const [showPolishOptions, setShowPolishOptions] = useState(false); // New state for polish options
   const [polishContextText, setPolishContextText] = useState(""); // Store text for polishing
+  const [currentOperation, setCurrentOperation] = useState<string | null>(null); // Track the current operation
   const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedBg] = useLocalStorage<string>("novel__background-color", "white");
   const [customPolishStyle, setCustomPolishStyle] = useState(""); // State for custom polish style input
@@ -70,6 +73,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
   const complete = async (text: string, options?: CompleteOptions) => {
     setIsLoading(true);
     setCompletion("");
+    setCurrentOperation(options?.body.option || null); // Set current operation
     // Don't clear input value here, let the user decide
     // setInputValue("");
 
@@ -143,6 +147,12 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
   const handleToolClick = (option: string) => {
     let text = "";
     const { from, empty } = editor.state.selection;
+    const editorInstance = editor; // Use the passed editor prop
+
+    if (!editorInstance) {
+      toast.error("编辑器实例未找到。");
+      return;
+    }
 
     if (option === "improve") {
       if (empty) {
@@ -164,6 +174,24 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
       setShowPolishOptions(true);
       setCompletion(""); // Clear previous completion
       return; // Don't call complete yet, show style options
+    }
+
+    if (option === "generate_title") {
+      // For "generate_title", get the entire document content
+      try {
+        text = editorInstance.getText(); // Get plain text content
+      } catch (e) {
+        toast.error("获取编辑器内容失败。");
+        return;
+      }
+      if (!text || text.trim().length < 10) {
+        // Require some minimum content
+        toast.error("编辑器内容太少，无法生成标题。");
+        return;
+      }
+      // No need to set context or show options, directly call complete
+      complete(text, { body: { option } });
+      return; // Exit after handling
     }
 
     if (option === "continue") {
@@ -201,7 +229,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
         return;
       }
     } else {
-      // For other tools, selected text is usually required
+      // For other tools (excluding generate_title and continue), selected text is usually required
       if (empty) {
         toast.error("请先选中文本");
         return;
@@ -285,6 +313,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
   const handleDiscardCompletion = () => {
     editor.chain().unsetHighlight().run();
     setCompletion("");
+    setCurrentOperation(null); // Reset current operation
     // If discarding a continuation, allow re-input or go back
     // For now, just clears completion. If it was a continuation, the input field will reappear.
     // If it was a general tool, the tool buttons will reappear.
@@ -426,6 +455,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
             </div>
           </ScrollArea>
           <div className="flex justify-end space-x-2 px-2 pt-2 pb-0">
+            {/* Common Buttons */}
             <Button
               variant="outline"
               size="sm"
@@ -468,6 +498,44 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
               <Copy className="h-4 w-4 mr-1" />
               复制
             </Button>
+
+            {/* Conditional Buttons based on operation */}
+            {currentOperation !== "generate_title" && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    editor.chain().insertContentAt(editor.state.selection.to, `${completion}`).unsetHighlight().run();
+                    handleCloseDialog();
+                  }}
+                  className="bg-transparent text-muted-foreground hover:bg-blue-500/10 hover:text-foreground"
+                >
+                  <ArrowDownWideNarrow className="h-4 w-4 mr-1" />
+                  插入
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    editor.chain().deleteSelection().insertContent(completion).unsetHighlight().run();
+                    handleCloseDialog();
+                  }}
+                  className="bg-transparent text-muted-foreground hover:bg-blue-500/10 hover:text-foreground"
+                >
+                  <CheckCheck className="h-4 w-4 mr-1" />
+                  替换
+                </Button>
+              </>
+            )}
+            {/* Add specific button for applying title if needed later */}
+            {/* Example:
+            {currentOperation === "generate_title" && (
+              <Button variant="outline" size="sm" onClick={handleApplyTitle}>
+                 应用标题
+              </Button>
+            )}
+             */}
           </div>
         </div>
       )}

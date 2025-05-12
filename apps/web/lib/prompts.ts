@@ -1,6 +1,6 @@
 export const PROMPT = {
   // 基础提示
-  BASE: "你的回答只提供最终内容，最终内容里每句话保持一个段落，不要使用表情符号，不要解释任何内容，不要透露你自己的任何信息。双引号要使用中文的正反双引号。",
+  BASE: "你的回答只提供最终内容，最终内容里每句话保持一个段落，双引号必须使用中文的正反双引号。不要使用表情符号，不要解释任何内容，不要透露你自己的任何信息。",
 
   // 系统提示
   CONTINUE:
@@ -10,6 +10,8 @@ export const PROMPT = {
   LONGER: "你是一个资深网文作家，会扩写现有文本。",
   FIX: "你是一个资深网文作家，会修正现有文本的语法和拼写错误。限制回复在500字符以内，但要确保句子完整。",
   ZAP: "你是一个资深网文作家，会根据用户输入和指令生成文本。",
+  GENERATE_TITLE:
+    "你是一个资深网文作家，擅长根据文章内容生成引人入胜的标题。请根据提供的文本生成3个合适的标题建议，每个标题占一行，不超过15个中文字。", // New system prompt for generating titles
 
   // user提示
   USER_CONTINUE: "前文内容：{text}, 后文内容：{command}",
@@ -17,6 +19,7 @@ export const PROMPT = {
 
   USER_EXISTING: "现有文本: {text}",
   USER_COMMAND: "对于这段文本: {text}，你必须遵守命令: {command}",
+  USER_GENERATE_TITLE: "文章内容: {text}", // New user prompt for generating titles
 } as const;
 
 export function getPrompt(type: keyof typeof PROMPT, params?: Record<string, string>): string {

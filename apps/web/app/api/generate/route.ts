@@ -119,6 +119,16 @@ export async function POST(req: Request): Promise<Response> {
         content: getPrompt("USER_COMMAND", { text: prompt, command: command }),
       } as OpenAI.ChatCompletionUserMessageParam,
     ])
+    .with("generate_title", () => [
+      {
+        role: "system",
+        content: getPrompt("GENERATE_TITLE"),
+      } as OpenAI.ChatCompletionSystemMessageParam,
+      {
+        role: "user",
+        content: getPrompt("USER_GENERATE_TITLE", { text: prompt }),
+      } as OpenAI.ChatCompletionUserMessageParam,
+    ])
     .run();
 
   const completion = await openai.chat.completions.create({
