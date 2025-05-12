@@ -500,7 +500,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
             </Button>
 
             {/* Conditional Buttons based on operation */}
-            {currentOperation !== "generate_title" && (
+            {/* {currentOperation !== "generate_title" && (
               <>
                 <Button
                   variant="outline"
@@ -527,7 +527,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
                   替换
                 </Button>
               </>
-            )}
+            )} */}
             {/* Add specific button for applying title if needed later */}
             {/* Example:
             {currentOperation === "generate_title" && (
