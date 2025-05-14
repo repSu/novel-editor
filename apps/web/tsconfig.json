@@ -8,7 +8,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "novel": ["../packages/headless/src"]
     },
     "sourceMap": true
   },

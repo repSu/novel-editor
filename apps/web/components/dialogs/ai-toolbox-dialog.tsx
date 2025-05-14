@@ -98,7 +98,9 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        toast.error("请求失败, 服务器繁忙,请稍后重试");
+        editor.chain().unsetHighlight().run();
+        return;
       }
 
       const reader = response.body?.getReader();
@@ -124,19 +126,10 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
         }
       }
     } catch (err) {
-      // Use default catch or 'unknown' and check type
-      if (err instanceof Error) {
-        // Type assertion or check instanceof Error
-        if (err.name !== "AbortError") {
-          console.error("AI request failed:", err);
-          toast.error(`AI请求失败: ${err.message}`);
-          editor.chain().unsetHighlight().run(); // Remove highlight on error
-        }
-      } else {
-        // Handle non-Error types or cases where err is not an Error instance
-        console.error("AI request failed with unknown error type:", err);
-        toast.error("AI请求发生未知错误");
-        editor.chain().unsetHighlight().run(); // Remove highlight on error
+      if (err instanceof Error && err.name !== "AbortError") {
+        console.error("AI request failed:", err);
+        toast.error("请求失败, 服务器繁忙,请稍后重试");
+        editor.chain().unsetHighlight().run();
       }
     } finally {
       setIsLoading(false);
@@ -401,9 +394,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
 
   return (
     <Command
-      className={`ai-toolbox-command fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full h-auto px-4 pt-4 pb-0 rounded-t-lg shadow-xl z-50 border ${
-        selectedBg === "dark" ? "border-gray-600" : "border-border"
-      } ${APP_THEME_COLORS.find((tc) => tc.value === selectedBg)?.applyClass || "bg-white"}`}
+      className={`app-dialog-theme fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full h-auto px-4 pt-4 pb-0 rounded-t-lg shadow-xl z-50 border-[color:var(--app-divider-border)] ${APP_THEME_COLORS.find((tc) => tc.value === selectedBg)?.applyClass || "bg-white"}`}
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
@@ -427,22 +418,26 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
             </Button>
           )}
         </div>
-        <h2 className="text-sm font-semibold text-foreground text-center">
+        <h2 className="text-sm font-semibold text-[color:var(--app-title-color)] text-center">
           {isInputtingForContinue && !isLoading && !hasCompletion
             ? "请输入后续剧情简述"
             : showPolishOptions && !isLoading && !hasCompletion
               ? "选择改写风格"
               : "AI工具箱"}
         </h2>
-        <button type="button" onClick={handleCloseDialog} className="p-1 rounded-full hover:bg-muted">
-          <X className="h-5 w-5 text-muted-foreground" />
+        <button
+          type="button"
+          onClick={handleCloseDialog}
+          className="p-1 rounded-full hover:bg-[color:var(--app-hover-bg)]"
+        >
+          <X className="h-5 w-5 text-[color:var(--app-icon-color)]" />
         </button>
       </div>
 
       {/* Completion Result Area */}
       {hasCompletion && !isLoading && (
         <div className="flex flex-col mb-12">
-          <ScrollArea className="p-2 px-4 max-h-[200px] border border-border rounded-md overflow-y-auto bg-white/90">
+          <ScrollArea className="p-2 px-4 max-h-[200px] border border-border rounded-md overflow-y-auto bg-[color:var(--app-card-bg)]">
             <div className="prose prose-sm dark:prose-invert max-w-full">
               <Markdown>{completion}</Markdown>
             </div>
@@ -453,7 +448,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
               variant="outline"
               size="sm"
               onClick={handleDiscardCompletion}
-              className="bg-transparent text-muted-foreground hover:bg-blue-500/10 hover:text-foreground"
+              className="bg-transparent text-[color:var(--app-text-color)] hover:bg-[color:var(--app-hover-bg)] hover:text-[color:var(--app-title-color)]"
             >
               <X className="h-4 w-4 mr-1" />
               放弃
@@ -465,7 +460,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
                 editor.chain().insertContentAt(editor.state.selection.to, `${completion}`).unsetHighlight().run();
                 handleCloseDialog();
               }}
-              className="bg-transparent text-muted-foreground hover:bg-blue-500/10 hover:text-foreground"
+              className="bg-transparent text-[color:var(--app-text-color)] hover:bg-[color:var(--app-hover-bg)] hover:text-[color:var(--app-title-color)]"
             >
               <ArrowDownWideNarrow className="h-4 w-4 mr-1" />
               插入
@@ -477,7 +472,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
                 editor.chain().deleteSelection().insertContent(completion).unsetHighlight().run();
                 handleCloseDialog();
               }}
-              className="bg-transparent text-muted-foreground hover:bg-blue-500/10 hover:text-foreground"
+              className="bg-transparent text-[color:var(--app-text-color)] hover:bg-[color:var(--app-hover-bg)] hover:text-[color:var(--app-title-color)]"
             >
               <CheckCheck className="h-4 w-4 mr-1" />
               替换
@@ -486,7 +481,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
               variant="outline"
               size="sm"
               onClick={() => copyToClipboard(completion)}
-              className="bg-transparent text-muted-foreground hover:bg-blue-500/10 hover:text-foreground"
+              className="bg-transparent text-[color:var(--app-text-color)] hover:bg-[color:var(--app-hover-bg)] hover:text-[color:var(--app-title-color)]"
             >
               <Copy className="h-4 w-4 mr-1" />
               复制
@@ -502,7 +497,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
                     editor.chain().insertContentAt(editor.state.selection.to, `${completion}`).unsetHighlight().run();
                     handleCloseDialog();
                   }}
-                  className="bg-transparent text-muted-foreground hover:bg-blue-500/10 hover:text-foreground"
+                  className="bg-transparent text-muted-foreground hover:bg-[color:var(--ai-interactive-hover-bg)] hover:text-foreground"
                 >
                   <ArrowDownWideNarrow className="h-4 w-4 mr-1" />
                   插入
@@ -514,7 +509,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
                     editor.chain().deleteSelection().insertContent(completion).unsetHighlight().run();
                     handleCloseDialog();
                   }}
-                  className="bg-transparent text-muted-foreground hover:bg-blue-500/10 hover:text-foreground"
+                  className="bg-transparent text-muted-foreground hover:bg-[color:var(--ai-interactive-hover-bg)] hover:text-foreground"
                 >
                   <CheckCheck className="h-4 w-4 mr-1" />
                   替换
@@ -535,7 +530,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
 
       {/* Loading Indicator */}
       {isLoading && (
-        <div className="flex h-12 w-full items-center justify-center px-4 text-sm font-medium text-muted-foreground mb-12 text-purple-500">
+        <div className="flex h-12 w-full items-center justify-center px-4 text-sm font-medium text-muted-foreground mb-12 text-[color:var(--ai-loading-color)]">
           <Magic className="mr-2 h-4 w-4 shrink-0" />
           思考中
           <div className="ml-2 mt-1">
@@ -588,7 +583,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
               className="flex flex-col items-center mx-1.5 my-1 p-2 rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
               title={tool.name}
             >
-              <tool.icon className="h-6 w-6 text-blue-500" />
+              <tool.icon className="h-6 w-6 text-[color:var(--app-button-color)]" />
               <span className="text-xs text-muted-foreground mt-1.5 text-center overflow-hidden text-ellipsis block whitespace-nowrap w-14">
                 {tool.name}
               </span>
@@ -606,7 +601,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
               variant="outline"
               size="sm"
               onClick={() => handlePolishSubmit(style.style)}
-              className="m-1"
+              className="m-1 bg-transparent text-[color:var(--app-text-color)] hover:bg-[color:var(--app-hover-bg)] hover:text-[color:var(--app-title-color)]"
             >
               {style.name}
             </Button>

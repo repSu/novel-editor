@@ -22,14 +22,14 @@ const SaveStatus = ({
   wordCount: number;
 }) => {
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-500">
+    <div className="flex items-center gap-2 text-sm text-muted-foreground">
       {status === "saving" ? (
         <>
           <LoadingCircle dimensions="h-4 w-4" />
           <span>保存中...</span>
         </>
       ) : status === "error" ? (
-        <span className="text-red-500">保存失败</span>
+        <span className="text-destructive">保存失败</span>
       ) : (
         <span>已保存</span>
       )}
@@ -41,6 +41,7 @@ const SaveStatus = ({
 
 export default function Page() {
   const [isTypoCheckOpen, setIsTypoCheckOpen] = useState(false);
+  const [theme, setTheme] = useState("");
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [displayTitle, setDisplayTitle] = useState(""); // Initialize with empty string
 
@@ -127,7 +128,9 @@ export default function Page() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-gray-50">
+    // Removed the local 'theme' state class from this div.
+    // Styling is now applied globally to the <html> element.
+    <div className="flex h-screen flex-col bg-background">
       <header className="sticky top-0 z-10">
         <div className="flex h-14 items-center justify-between px-4">
           <Button variant="ghost" size="icon" onClick={toastUnavailable}>
@@ -136,30 +139,30 @@ export default function Page() {
 
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => setIsSettingsOpen(true)}>
-              <Settings className="h-5 w-5 text-gray-600" />
+              <Settings className="h-5 w-5 text-muted-foreground" />
             </Button>
 
             {/* <Button variant="ghost" size="icon" onClick={() => setIsTypoCheckOpen(true)}> */}
             <Button variant="ghost" size="icon" onClick={() => toastUnavailable()}>
-              <SpellCheck className="h-5 w-5 text-gray-600" />
+              <SpellCheck className="h-5 w-5 text-muted-foreground" />
             </Button>
 
             {/* <Button variant="ghost" size="icon" onClick={() => setIsOutlineOpen(true)}> */}
             <Button variant="ghost" size="icon" onClick={() => toastUnavailable()}>
-              <List className="h-5 w-5 text-gray-600" />
+              <List className="h-5 w-5 text-muted-foreground" />
             </Button>
 
             <Button variant="ghost" size="icon" onClick={toastUnavailable}>
-              <Cloud className="h-5 w-5 text-gray-600" />
+              <Cloud className="h-5 w-5 text-muted-foreground" />
             </Button>
           </div>
 
-          <Button variant="ghost" className="text-orange-300 font-semibold" onClick={toastUnavailable}>
+          <Button variant="ghost" className="text-primary font-semibold" onClick={toastUnavailable}>
             下一步
           </Button>
         </div>
         <div className="flex h-10 items-center justify-between px-4 text-sm text-gray-500">
-          <div className="flex items-center gap-2 rounded-full bg-gray-100 px-4 py-1.5 cursor-pointer hover:bg-gray-200">
+          <div className="flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 cursor-pointer hover:bg-secondary-foreground">
             <span>第一卷：初见</span>
             <ChevronLeft className="h-4 w-4 rotate-180 transform" />
           </div>
@@ -210,7 +213,7 @@ export default function Page() {
             variant="ghost"
             size="icon"
             onClick={() => editorRef.current?.getEditor()?.commands.undo()}
-            className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted"
           >
             <Undo className="h-5 w-5" />
           </Button>
@@ -218,7 +221,7 @@ export default function Page() {
             variant="ghost"
             size="icon"
             onClick={() => editorRef.current?.getEditor()?.commands.redo()}
-            className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted"
           >
             <Redo className="h-5 w-5" />
           </Button>
@@ -252,7 +255,7 @@ export default function Page() {
                 variant="outline"
                 size="sm"
                 onClick={handleCopyContent}
-                className="ml-2 h-8 w-16 flex items-center border-slate-300 hover:bg-slate-100 text-slate-600"
+                className="ml-2 h-8 w-16 flex items-center border border-border hover:bg-muted text-muted-foreground"
               >
                 <Copy className="h-4 w-2.5" /> 复制
               </Button>
@@ -264,7 +267,7 @@ export default function Page() {
             variant="outline"
             size="sm"
             onClick={handleClearContent}
-            className="ml-2 h-8 w-16 flex items-center border-slate-300 hover:bg-red-100 text-red-600 hover:border-red-400" // Adjusted style for clear action
+            className="ml-2 h-8 w-16 flex items-center border border-border hover:bg-destructive/10 text-destructive hover:border-destructive" // Adjusted style for clear action
           >
             <Trash2 className="h-4 w-2.5" /> 清空
           </Button>

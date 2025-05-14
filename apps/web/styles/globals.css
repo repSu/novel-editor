@@ -44,9 +44,51 @@
     --novel-highlight-pink: #faf1f5;
     --novel-highlight-gray: #f1f1ef;
 
+    /* Novel Text Colors (Light Mode) */
+    --novel-black: var(--foreground); /* Default text color */
+    --novel-text-purple: 262 89% 56%; /* #9333EA */
+    --novel-text-red: 0 100% 44%; /* #E00000 */
+    --novel-text-yellow: 45 94% 48%; /* #EAB308 */
+    --novel-text-blue: 222 84% 54%; /* #2563EB */
+    --novel-text-green: 120 100% 27%; /* #008A00 */
+    --novel-text-orange: 39 100% 50%; /* #FFA500 */
+    --novel-text-pink: 324 56% 61%; /* #BA4081 */
+    --novel-text-gray: 30 4% 64%; /* #A8A29E */
+
+    /* Code Highlighting Colors (Light Mode) */
+    --code-background: 0 0% 5%; /* #0d0d0d */
+    --code-foreground: 0 0% 100%; /* #fff */
+    --code-comment: 0 0% 38%; /* #616161 */
+    --code-variable: 0 92% 74%; /* #f98181 */
+    --code-number: 30 94% 76%; /* #fbbc88 */
+    --code-string: 99 78% 75%; /* #b9f18d */
+    --code-title: 55 90% 78%; /* #faf594 */
+    --code-keyword: 199 92% 70%; /* #70cff8 */
+
     --editor-font-base-size: 16px;
     --title-font-base-size: 18px; /* 假设标题基础字号为 18px */
     --font-size-scale-factor: 1;
+
+    /* AI Toolbox Colors (Light Mode) */
+    --ai-loading: 257 83% 56%; /* Corresponds to purple-500 */
+    --ai-scrollarea-bg: 0 0% 100% / 0.9; /* Corresponds to white/90 */
+
+    /* Base Tailwind Colors (approximated HSL) */
+    --gray-50-hsl: 220 14% 99%;
+    --gray-100-hsl: 220 14% 96%;
+    --gray-200-hsl: 220 13% 91%;
+    --gray-300-hsl: 220 12% 81%;
+    --gray-400-hsl: 220 10% 64%;
+    --gray-500-hsl: 220 9% 46%;
+    --gray-600-hsl: 220 13% 40%;
+    --gray-700-hsl: 220 13% 30%;
+    --gray-800-hsl: 220 12% 17%;
+    --gray-900-hsl: 220 10% 10%;
+    --orange-500-hsl: 30 100% 50%;
+    --blue-500-hsl: 220 89% 60%;
+    --purple-500-hsl: 257 83% 56%;
+    --white-hsl: 0 0% 100%;
+    --black-hsl: 0 0% 0%;
   }
 
   .dark {
@@ -86,8 +128,111 @@
     --novel-highlight-green: #1a5c20;
     --novel-highlight-orange: #5c3a1a;
     --novel-highlight-pink: #5c1a3a;
-    --novel-highlight-gray: #3a3a3a;
+    --novel-text-gray: 30 4% 80%;
+
+    /* Code Highlighting Colors (Dark Mode) */
+    --code-background: 222.2 84% 4.9%; /* Using background variable for consistency */
+    --code-foreground: 210 40% 98%; /* Using foreground variable for consistency */
+    --code-comment: 215 20.2% 65.1%; /* Using muted-foreground variable for consistency */
+    --code-variable: 0 60% 60%;
+    --code-number: 30 60% 60%;
+    --code-string: 100 60% 60%;
+    --code-title: 50 60% 60%;
+    --code-keyword: 240 60% 60%;
   }
+
+  .dark {
+    /* Base Tailwind Colors (approximated HSL) - Dark Mode adjustments */
+    --gray-50-hsl: 220 14% 96%; /* Adjust for dark mode appearance */
+    --gray-100-hsl: 220 13% 91%;
+    --gray-200-hsl: 220 12% 81%;
+    --gray-300-hsl: 220 10% 64%;
+    --gray-400-hsl: 220 9% 46%;
+    --gray-500-hsl: 220 13% 40%;
+    --gray-600-hsl: 220 13% 30%;
+    --gray-700-hsl: 220 12% 17%;
+    --gray-800-hsl: 220 10% 10%;
+    --gray-900-hsl: 220 10% 5%;
+    --orange-500-hsl: 30 100% 60%; /* Slightly brighter in dark mode */
+    --blue-500-hsl: 220 89% 70%; /* Slightly brighter in dark mode */
+    --purple-500-hsl: 257 83% 70%; /* Slightly brighter in dark mode */
+    --white-hsl: 0 0% 100%;
+    --black-hsl: 0 0% 0%;
+  }
+}
+
+@layer components {
+  /* 对话框基础样式 - 完全独立不依赖外部变量 */
+  .app-dialog-theme {
+    /* 重置基础变量 */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --primary: 222.2 47.4% 11.2%;
+    --secondary: 210 40% 96.1%;
+    --muted: 210 40% 96.1%;
+    --accent: 210 40% 96.1%;
+    --destructive: 0 84.2% 60.2%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    /* 浅色主题样式 - 固定HSL值 */
+    --app-text-color: hsl(220 12% 17%); /* gray-800 */
+    --app-title-color: hsl(220 10% 10%); /* gray-900 */
+    --app-section-title-color: hsl(220 12% 17%); /* gray-800 */
+    --app-icon-color: hsl(220 9% 46%); /* gray-500 */
+    --app-hover-bg: hsl(220 14% 96%); /* gray-100 */
+    --app-card-bg: hsl(195deg 51.19% 86.15% / 21%); /* white */
+    --app-divider-border: hsl(220 13% 91%); /* gray-200 */
+    --app-slider-bg: hsl(220 13% 91%); /* gray-200 */
+    --app-toggle-on-bg: hsl(30 100% 50%); /* orange-500 */
+    --app-toggle-off-bg: hsl(220 12% 81%); /* gray-300 */
+    --app-option-selected-border: hsl(30 100% 50%); /* orange-500 */
+    --app-option-white-border-light: hsl(220 12% 81%); /* gray-300 */
+    --app-option-white-border-dark: hsl(220 9% 46%); /* gray-500 */
+    --app-option-white-border-dark-selected: hsl(220 10% 64%); /* gray-400 */
+    --app-toggle-thumb-bg: hsl(0 0% 100%); /* white */
+    --app-toggle-focus-ring: hsl(0 0% 100%); /* white */
+    --app-button-color: hsl(220 89% 60%); /* blue-500 */
+  }
+
+  /* 深色主题覆盖样式 - 只定义需要变化的值 */
+  .bg-gray-800.app-dialog-theme {
+    --app-text-color: hsl(220 14% 96%); /* gray-100 */
+    --app-title-color: hsl(220 14% 96%); /* gray-100 */
+    --app-section-title-color: hsl(220 13% 91%); /* gray-200 */
+    --app-icon-color: hsl(220 10% 64%); /* gray-400 */
+    --app-hover-bg: hsl(220deg 1.25% 57.5% / 54%); /* gray-800 */
+    --app-card-bg: hsl(220deg 14.39% 54.73% / 36%); /* gray-800 */
+    --app-divider-border: hsl(220 13% 30%); /* gray-600 */
+    --app-slider-bg: hsl(220 13% 30%); /* gray-600 */
+    --app-toggle-off-bg: hsl(220 13% 40%); /* gray-500 */
+  }
+
+  /* Add rules for other APP_THEME_COLORS if needed */
+  /* Example for bg-yellow-50: */
+  /*
+  .bg-yellow-50.settings-dialog-theme {
+    --settings-text-color: hsl(var(--gray-800-hsl));
+    --settings-title-color: hsl(var(--gray-900-hsl));
+    --settings-section-title-color: hsl(var(--gray-700-hsl));
+    --settings-icon-color: hsl(var(--gray-500-hsl));
+    --settings-hover-bg: hsl(var(--gray-100-hsl));
+    --settings-card-bg: hsl(var(--white-hsl));
+    --settings-divider-border: hsl(var(--gray-200-hsl));
+    --settings-slider-bg: hsl(var(--gray-200-hsl));
+    --settings-toggle-on-bg: hsl(var(--orange-500-hsl));
+    --settings-toggle-off-bg: hsl(var(--gray-300-hsl));
+    --settings-option-selected-border: hsl(var(--orange-500-hsl));
+    --settings-option-white-border-light: hsl(var(--gray-300-hsl));
+    --settings-option-white-border-dark: hsl(var(--gray-500-hsl));
+    --settings-option-white-border-dark-selected: hsl(var(--gray-400-hsl));
+    --settings-toggle-thumb-bg: hsl(var(--white-hsl));
+    --settings-toggle-focus-ring: hsl(var(--white-hsl));
+  }
+  */
 }
 
 @layer base {
@@ -105,16 +250,16 @@
   /* Placeholder for contentEditable title in page.tsx (class-based) */
   .page-main-title.title-is-empty[contentEditable="true"][data-placeholder]::before {
     content: attr(data-placeholder);
-    color: #a0aec0; /* Tailwind gray-500, or your preferred placeholder color */
+    color: hsl(var(--muted-foreground)); /* Use muted-foreground for placeholder */
     pointer-events: none; /* Ensure the placeholder text doesn't interfere with clicks */
     display: block;
   }
 }
 
 pre {
-  background: #0d0d0d;
+  background: hsl(var(--code-background));
   border-radius: 0.5rem;
-  color: #fff;
+  color: hsl(var(--code-foreground));
   font-family: "JetBrainsMono", monospace;
   padding: 0.75rem 1rem;
 
@@ -127,7 +272,7 @@ pre {
 
   .hljs-comment,
   .hljs-quote {
-    color: #616161;
+    color: hsl(var(--code-comment));
   }
 
   .hljs-variable,
@@ -140,7 +285,7 @@ pre {
   .hljs-name,
   .hljs-selector-id,
   .hljs-selector-class {
-    color: #f98181;
+    color: hsl(var(--code-variable));
   }
 
   .hljs-number,
@@ -150,23 +295,23 @@ pre {
   .hljs-literal,
   .hljs-type,
   .hljs-params {
-    color: #fbbc88;
+    color: hsl(var(--code-number));
   }
 
   .hljs-string,
   .hljs-symbol,
   .hljs-bullet {
-    color: #b9f18d;
+    color: hsl(var(--code-string));
   }
 
   .hljs-title,
   .hljs-section {
-    color: #faf594;
+    color: hsl(var(--code-title));
   }
 
   .hljs-keyword,
   .hljs-selector-tag {
-    color: #70cff8;
+    color: hsl(var(--code-keyword));
   }
 
   .hljs-emphasis {

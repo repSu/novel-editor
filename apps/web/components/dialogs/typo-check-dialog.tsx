@@ -9,7 +9,7 @@ import { X } from "lucide-react";
 
 // Placeholder for the illustration component/element
 const EmptyBoxIllustration = () => (
-  <div className="my-8 text-center text-gray-400">
+  <div className="my-8 text-center text-[color:var(--app-icon-color)]">
     {/* Basic SVG placeholder */}
     <svg
       className="mx-auto h-24 w-24"
@@ -36,22 +36,22 @@ export function TypoCheckDialogContent({ onClose }: TypoCheckDialogContentProps)
   const [selectedBg] = useLocalStorage<string>("novel__background-color", "white");
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 w-full flex flex-col p-4 rounded-t-lg shadow-lg z-20 border-t ${selectedBg === "dark" ? "border-gray-600" : "border-gray-200"} ${APP_THEME_COLORS.find((tc) => tc.value === selectedBg)?.applyClass || "bg-white"}`}
+      className={`app-dialog-theme fixed bottom-0 left-0 right-0 w-full flex flex-col p-4 rounded-t-lg shadow-lg z-20 border-t border-[color:var(--app-divider-border)] ${APP_THEME_COLORS.find((tc) => tc.value === selectedBg)?.applyClass || "bg-white"}`}
     >
       {/* Header with Close Button */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-800">
-          错别字・<span className="text-orange-500">0</span>
+        <h2 className="text-lg font-semibold text-[color:var(--app-title-color)]">
+          错别字・<span className="text-[color:var(--app-text-color)]">0</span>
         </h2>
-        <button type="button" onClick={onClose} className="p-1 rounded-full hover:bg-gray-200">
-          <X className="h-5 w-5 text-gray-500" />
+        <button type="button" onClick={onClose} className="p-1 rounded-full hover:bg-[color:var(--app-hover-bg)]">
+          <X className="h-5 w-5 text-[color:var(--app-icon-color)]" />
         </button>
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col items-center justify-center text-center bg-white/90 rounded-lg p-4">
+      <div className="flex flex-1 flex-col items-center justify-center text-center bg-[color:var(--app-card-bg)] rounded-lg p-4">
         <EmptyBoxIllustration />
-        <p className="text-gray-500">暂无错别字</p>
+        <p className="text-[color:var(--app-text-color)]">暂无错别字</p>
       </div>
     </div>
   );
