@@ -67,6 +67,53 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
   const [showPolishOptions, setShowPolishOptions] = useState(false); // New state for polish options
   const [polishContextText, setPolishContextText] = useState(""); // Store text for polishing
   const [currentOperation, setCurrentOperation] = useState<string | null>(null); // Track the current operation
+
+  // 滚动到选中文本的函数
+  const scrollToSelection = () => {
+    const mainContentArea = document.getElementById("main-content-area");
+    if (!mainContentArea || !editor?.state.selection || editor.state.selection.empty) return;
+
+    try {
+      const { from } = editor.state.selection;
+      const domRef = editor.view.domAtPos(from);
+      let elementToScroll = domRef.node;
+
+      if (elementToScroll.nodeType === Node.TEXT_NODE) {
+        elementToScroll = elementToScroll.parentElement;
+      }
+
+      if (elementToScroll instanceof HTMLElement) {
+        const elementRect = elementToScroll.getBoundingClientRect();
+        const mainRect = mainContentArea.getBoundingClientRect();
+
+        // 计算需要滚动的位置
+        const scrollTop = mainContentArea.scrollTop + (elementRect.top - mainRect.top);
+
+        // 确保有足够的底部空间来滚动
+        const viewportHeight = mainContentArea.clientHeight;
+        mainContentArea.style.paddingBottom = `${viewportHeight}px`;
+
+        // 执行滚动
+        requestAnimationFrame(() => {
+          mainContentArea.scrollTo({
+            top: Math.max(0, scrollTop),
+            behavior: "smooth",
+          });
+
+          // 添加延时滚动以处理可能的布局变化
+          setTimeout(() => {
+            mainContentArea.scrollTo({
+              top: Math.max(0, scrollTop),
+              behavior: "smooth",
+            });
+          }, 100);
+        });
+      }
+    } catch (e) {
+      console.error("Error in scrollToSelection:", e);
+    }
+  };
+  const [isVisible, setIsVisible] = useState(true); // 添加可见性状态
   const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedBg] = useLocalStorage<string>("novel__background-color", "white");
   const [aiHighlightEnabled] = useLocalStorage<boolean>("novel__ai-highlight-enabled", true);
@@ -144,12 +191,15 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
   const handleToolClick = (option: string) => {
     let text = "";
     const { from, empty } = editor.state.selection;
-    const editorInstance = editor; // Use the passed editor prop
+    const editorInstance = editor;
 
     if (!editorInstance) {
       toast.error("编辑器实例未找到。");
       return;
     }
+
+    // 执行滚动
+    scrollToSelection();
 
     if (option === "improve") {
       if (empty) {
@@ -332,68 +382,42 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
     }
   }, [isLoading, hasCompletion, isInputtingForContinue]);
 
-  // Effect to adjust main content area padding when dialog is open
+  // Effect to handle dialog open and scroll position
   useEffect(() => {
-    const toolboxElement = document.querySelector(".ai-toolbox-command");
-    const mainContentArea = document.getElementById("main-content-area");
-
-    let originalPaddingBottom = "";
-
-    if (toolboxElement && mainContentArea) {
-      const toolboxHeight = toolboxElement.clientHeight;
-      originalPaddingBottom = mainContentArea.style.paddingBottom;
-      // Add a small buffer to the padding to ensure content is not cut off
-      mainContentArea.style.paddingBottom = `${toolboxHeight + 16}px`; // 16px buffer (p-4 default)
-
-      // Scroll the selection to the top of the main content area's viewport
-      if (editor?.state.selection && !editor.state.selection.empty) {
-        try {
-          const { from } = editor.state.selection;
-          // domAtPos gives the DOM node *after* the position. For the start of a selection,
-          // this should be the first node within or at the boundary of the selection.
-          const domRef = editor.view.domAtPos(from);
-
-          let elementToScroll = domRef.node;
-          // If it's a text node, get its parent element for scrolling,
-          // as scrollIntoView works on HTMLElements.
-          if (elementToScroll.nodeType === Node.TEXT_NODE) {
-            elementToScroll = elementToScroll.parentElement;
-          }
-
-          if (elementToScroll instanceof HTMLElement && mainContentArea.contains(elementToScroll)) {
-            // Calculate the scroll amount needed for mainContentArea
-            // to bring the top of elementToScroll to the top of mainContentArea's viewport.
-            const mainRect = mainContentArea.getBoundingClientRect();
-            const elementRect = elementToScroll.getBoundingClientRect();
-
-            // The desired scrollTop for mainContentArea is its current scrollTop
-            // plus the difference between the element's top and the main area's top.
-            const scrollOffset = elementRect.top - mainRect.top;
-            mainContentArea.scrollTop += scrollOffset;
-          } else {
-            // Fallback to Tiptap's default scrollIntoView if we couldn't get a proper HTMLElement
-            // or if the element is not contained within the main scrollable area (edge case).
-            editor.commands.scrollIntoView();
-          }
-        } catch (e) {
-          console.error("Error scrolling to selection:", e);
-          // Fallback if any error occurs during custom scroll logic
-          if (editor) {
-            // editor might be null if an error happened before its check
-            editor.commands.scrollIntoView();
-          }
-        }
-      }
-      // If no selection or selection is empty, no specific scroll action is taken here,
-      // allowing the editor to maintain its current scroll position relative to the new padding.
-    }
+    // 组件挂载时执行滚动
+    scrollToSelection();
 
     return () => {
+      const mainContentArea = document.getElementById("main-content-area");
       if (mainContentArea) {
-        mainContentArea.style.paddingBottom = originalPaddingBottom;
+        mainContentArea.style.paddingBottom = "";
       }
     };
-  }, []); // Runs once on mount and cleanup on unmount
+  }, [editor]); // 当 editor 改变时重新执行
+
+  // 单独处理 padding
+  useEffect(() => {
+    const adjustPadding = () => {
+      const mainContentArea = document.getElementById("main-content-area");
+      const toolboxHeight = document.querySelector(".ai-toolbox-command")?.clientHeight || 0;
+
+      if (mainContentArea && toolboxHeight > 0) {
+        mainContentArea.style.paddingBottom = `${toolboxHeight + 16}px`;
+      }
+    };
+
+    // 初始调整和延时调整
+    adjustPadding();
+    const timeoutId = setTimeout(adjustPadding, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      const mainContentArea = document.getElementById("main-content-area");
+      if (mainContentArea) {
+        mainContentArea.style.paddingBottom = "";
+      }
+    };
+  }, []); // 只在组件挂载时执行一次
 
   return (
     <Command
