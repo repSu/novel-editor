@@ -69,6 +69,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
   const [currentOperation, setCurrentOperation] = useState<string | null>(null); // Track the current operation
   const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedBg] = useLocalStorage<string>("novel__background-color", "white");
+  const [aiHighlightEnabled] = useLocalStorage<boolean>("novel__ai-highlight-enabled", true);
   const [customPolishStyle, setCustomPolishStyle] = useState(""); // State for custom polish style input
 
   const complete = async (text: string, options?: CompleteOptions) => {
@@ -84,7 +85,9 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
     abortControllerRef.current = new AbortController();
 
     try {
-      addAIHighlight(editor); // Highlight the text being processed
+      if (aiHighlightEnabled) {
+        addAIHighlight(editor); // Highlight the text being processed
+      }
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: {

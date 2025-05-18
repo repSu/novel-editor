@@ -17,6 +17,7 @@ export function SettingsDialogContent({ onClose }: SettingsDialogContentProps) {
   const { setTheme } = useTheme(); // Get setTheme function
   const [fontSizeScale, setFontSizeScale] = useLocalStorage<number>("novel__font-size-scale", 1);
   const [selectedBg, setSelectedBg] = useLocalStorage<string>("novel__background-color", "white");
+  const [aiHighlightEnabled, setAiHighlightEnabled] = useLocalStorage<boolean>("novel__ai-highlight-enabled", true);
   const [customTitleStyle, setCustomTitleStyle] = useState(true);
   const [screenAlwaysOn, setScreenAlwaysOn] = useState(false);
   return (
@@ -165,6 +166,29 @@ export function SettingsDialogContent({ onClose }: SettingsDialogContentProps) {
                   aria-hidden="true"
                   className={`pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-[color:var(--app-toggle-thumb-bg)] shadow-lg ring-0 transition duration-200 ease-in-out
                     ${screenAlwaysOn ? "translate-x-[20px]" : "translate-x-0"}`}
+                />
+              </div>
+            </div>
+
+            {/* AI Highlight */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-[color:var(--app-section-title-color)]">AI操作内容高亮</span>
+              <div
+                onClick={() => setAiHighlightEnabled(!aiHighlightEnabled)}
+                onKeyUp={(e) => {
+                  if (e.key === "Enter" || e.key === " ") setAiHighlightEnabled(!aiHighlightEnabled);
+                }}
+                role="switch"
+                aria-checked={aiHighlightEnabled}
+                tabIndex={0}
+                className={`relative inline-flex items-center h-[22px] w-[42px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--app-toggle-focus-ring)] focus-visible:ring-opacity-75
+                  ${aiHighlightEnabled ? "bg-[color:var(--app-toggle-on-bg)]" : "bg-[color:var(--app-toggle-off-bg)]"}
+                `}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none inline-block h-[18px] w-[18px] transform rounded-full bg-[color:var(--app-toggle-thumb-bg)] shadow-lg ring-0 transition duration-200 ease-in-out
+                    ${aiHighlightEnabled ? "translate-x-[20px]" : "translate-x-0"}`}
                 />
               </div>
             </div>
