@@ -1,5 +1,5 @@
 "use client";
-
+import LoadingOverlay from "@/components/ui/loading-overlay";
 import useLocalStorage from "@/hooks/use-local-storage";
 import { APP_THEME_COLORS } from "@/lib/theme-config"; // Import the shared config
 import { Analytics } from "@vercel/analytics/react";
@@ -94,6 +94,7 @@ export default function Providers({ children }: { children: ReactNode }) {
     >
       <AppContext.Provider value={{ font, setFont }}>
         <ThemeWrapper>
+          <LoadingOverlay />
           <ToasterProvider />
           {children}
           <Analytics />
