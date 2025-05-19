@@ -4,7 +4,7 @@ import useLocalStorage from "@/hooks/use-local-storage";
 import { APP_THEME_COLORS } from "@/lib/theme-config"; // Import the shared config
 import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider, useTheme } from "next-themes";
-import { type Dispatch, type ReactNode, type SetStateAction, createContext, useEffect, useState } from "react";
+import { type Dispatch, type ReactNode, type SetStateAction, createContext, useEffect, useLayoutEffect } from "react";
 import { Toaster } from "sonner";
 
 export const AppContext = createContext<{
@@ -71,18 +71,14 @@ function ThemeWrapper({ children }: { children: ReactNode }) {
 export default function Providers({ children }: { children: ReactNode }) {
   const [font, setFont] = useLocalStorage<string>("novel__font", "Default");
   const [fontSizeScale] = useLocalStorage<number>("novel__font-size-scale", 1);
-  const [mounted, setMounted] = useState(false);
+  const { setTheme } = useTheme();
 
-  useEffect(() => {
-    setMounted(true);
-    if (typeof window !== "undefined") {
-      document.documentElement.style.setProperty("--font-size-scale-factor", fontSizeScale.toString());
-    }
-  }, [fontSizeScale]);
-
-  if (!mounted) {
-    return <div className="hidden">{children}</div>;
-  }
+  useLayoutEffect(() => {
+    // 同步主题和字体设置
+    const savedTheme = localStorage.getItem("novel-theme") || "system";
+    setTheme(savedTheme);
+    document.documentElement.style.setProperty("--font-size-scale-factor", fontSizeScale.toString());
+  }, [fontSizeScale, setTheme]);
 
   return (
     <ThemeProvider
@@ -92,6 +88,7 @@ export default function Providers({ children }: { children: ReactNode }) {
       disableTransitionOnChange
       defaultTheme="system"
     >
+      <LoadingOverlay />
       <AppContext.Provider value={{ font, setFont }}>
         <ThemeWrapper>
           <LoadingOverlay />
