@@ -3,6 +3,7 @@
 import useLocalStorage from "@/hooks/use-local-storage";
 import { APP_THEME_COLORS } from "@/lib/theme-config"; // Import shared config
 import { toastUnavailable } from "@/lib/utils";
+import Cookies from "js-cookie";
 import { ChevronRight, Moon, X } from "lucide-react";
 import { useTheme } from "next-themes"; // Import useTheme
 import { useState } from "react";
@@ -93,6 +94,19 @@ export function SettingsDialogContent({ onClose }: SettingsDialogContentProps) {
                     onClick={() => {
                       setSelectedBg(themeColor.value);
                       setTheme(themeColor.value === "dark" ? "dark" : "light");
+
+                      // 同时设置cookie，确保服务端可以读取
+                      // 设置为30天过期，使用安全配置确保浏览器兼容性
+                      try {
+                        Cookies.set("novel__background-color", themeColor.value, {
+                          expires: 30,
+                          path: "/",
+                          sameSite: "strict",
+                          secure: window.location.protocol === "https:",
+                        });
+                      } catch (e) {
+                        console.error("Error updating cookie while setting background:", e);
+                      }
                     }}
                     className={`h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all duration-150 flex-shrink-0
                       ${selectedBg === themeColor.value ? "border-[color:var(--app-option-selected-border)]" : themeColor.value === "white" && selectedBg !== "dark" ? "border-[color:var(--app-option-white-border-light)]" : themeColor.value === "white" && selectedBg === "dark" ? "border-[color:var(--app-option-white-border-dark)]" : "border-transparent"}

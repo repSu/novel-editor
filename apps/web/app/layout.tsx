@@ -5,6 +5,7 @@ import "katex/dist/katex.min.css";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import Providers from "./providers";
+import ThemeScript from "./theme-script";
 
 const title = "智能写作";
 const description = "带有智能写作功能的编辑器";
@@ -32,6 +33,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body>
         <Providers>{children}</Providers>
       </body>

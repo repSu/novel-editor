@@ -91,7 +91,6 @@ export default function Providers({ children }: { children: ReactNode }) {
       <LoadingOverlay />
       <AppContext.Provider value={{ font, setFont }}>
         <ThemeWrapper>
-          <LoadingOverlay />
           <ToasterProvider />
           {children}
           <Analytics />

@@ -507,7 +507,10 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
             <Button
               variant="outline"
               size="sm"
-              onClick={() => copyToClipboard(completion)}
+              onClick={() => {
+                const normalizedText = completion.replace(/\n+/g, "\n");
+                copyToClipboard(normalizedText);
+              }}
               className="bg-transparent text-[color:var(--app-text-color)] hover:bg-[color:var(--app-hover-bg)] hover:text-[color:var(--app-title-color)]"
             >
               <Copy className="h-4 w-4 mr-1" />
