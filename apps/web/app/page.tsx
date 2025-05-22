@@ -1,6 +1,7 @@
 "use client";
 import { copyToClipboard, toastUnavailable } from "@/lib/utils";
 import { ChevronLeft, Cloud, Copy, List, Redo, Settings, Sparkles, SpellCheck, Trash2, Undo } from "lucide-react"; // Added Trash2
+import { useRouter } from "next/navigation";
 import type { EditorInstance } from "novel";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner"; // Import toast
@@ -40,10 +41,10 @@ const SaveStatus = ({
 };
 
 export default function Page() {
+  const router = useRouter();
   const [isTypoCheckOpen, setIsTypoCheckOpen] = useState(false);
-  const [theme, setTheme] = useState("");
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const [displayTitle, setDisplayTitle] = useState(""); // Initialize with empty string
+  const [_displayTitle, setDisplayTitle] = useState(""); // 用于保存标题状态
 
   const editorRef = useRef<{ getEditor: () => EditorInstance | null }>(null);
 
@@ -51,6 +52,13 @@ export default function Page() {
     const titleToSave = newTitle.trim(); // Trim whitespace
     window.localStorage.setItem("novel-title", titleToSave);
     setSaveStatus("saved");
+
+    // 检查是否是灵感记录，如果是则自动保存到草稿
+    const isInspiration = window.localStorage.getItem("is-inspiration");
+    if (isInspiration && titleToSave) {
+      saveToDrafts(titleToSave, editorRef.current?.getEditor()?.getText() || "");
+    }
+
     // If the title becomes empty, ensure the h1's innerHTML is also cleared
     // to help with CSS :empty selector, and update displayTitle state.
     if (titleRef.current && titleToSave === "") {
@@ -60,6 +68,26 @@ export default function Page() {
     // This ensures that if the user clears the title, the state reflects that,
     // allowing the :empty CSS pseudo-class to potentially work.
     setDisplayTitle(titleToSave);
+  };
+
+  const saveToDrafts = (title: string, content: string) => {
+    // 简单的草稿保存逻辑，实际项目中应该保存到数据库
+    const drafts = JSON.parse(localStorage.getItem("drafts") || "[]");
+    const draftId = Date.now().toString();
+    const newDraft = {
+      id: draftId,
+      title: title,
+      content: content,
+      wordCount: content.length,
+      updatedAt: new Date().toLocaleString(),
+      volume: "第一卷：初见",
+    };
+
+    drafts.unshift(newDraft);
+    localStorage.setItem("drafts", JSON.stringify(drafts));
+
+    // 清除灵感标记
+    localStorage.removeItem("is-inspiration");
   };
 
   const debouncedTitleUpdate = useDebouncedCallback(saveTitle, 500);
@@ -89,6 +117,27 @@ export default function Page() {
       const content = window.localStorage.getItem("novel-text-length");
       if (content) {
         setWordCount(Number.parseInt(content));
+      }
+
+      // 检查是否有草稿内容需要加载
+      const draftContent = window.localStorage.getItem("novel-content");
+      const draftId = window.localStorage.getItem("current-draft-id");
+
+      if (draftContent && draftId) {
+        // 如果有草稿内容，加载到编辑器中
+        const editor = editorRef.current?.getEditor();
+        if (editor) {
+          // 将纯文本内容转换为段落格式
+          const paragraphs = draftContent
+            .split("\n")
+            .filter((p) => p.trim())
+            .map((p) => `<p>${p}</p>`)
+            .join("");
+          editor.commands.setContent(paragraphs || "<p></p>");
+        }
+        // 清除草稿加载标记
+        window.localStorage.removeItem("novel-content");
+        window.localStorage.removeItem("current-draft-id");
       }
     }, 300);
 
@@ -133,7 +182,7 @@ export default function Page() {
     <div className="flex h-screen flex-col bg-background">
       <header className="sticky top-0 z-10">
         <div className="flex h-14 items-center justify-between px-4">
-          <Button variant="ghost" size="icon" onClick={toastUnavailable}>
+          <Button variant="ghost" size="icon" onClick={() => router.push("/drafts")}>
             <ChevronLeft className="h-6 w-6" />
           </Button>
 
@@ -162,10 +211,21 @@ export default function Page() {
           </Button>
         </div>
         <div className="flex h-10 items-center justify-between px-4 text-sm text-gray-500">
-          <div className="flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 cursor-pointer hover:bg-secondary-foreground">
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 cursor-pointer hover:bg-secondary-foreground"
+            onClick={() => router.push("/drafts?tab=drafts")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                router.push("/drafts?tab=drafts");
+              }
+            }}
+            aria-label="查看卷章列表"
+          >
             <span>第一卷：初见</span>
             <ChevronLeft className="h-4 w-4 rotate-180 transform" />
-          </div>
+          </button>
           <SaveStatus status={saveStatus} wordCount={wordCount} />
         </div>
       </header>

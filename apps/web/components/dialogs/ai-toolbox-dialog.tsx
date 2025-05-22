@@ -66,7 +66,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
   const [contextForContinue, setContextForContinue] = useState("");
   const [showPolishOptions, setShowPolishOptions] = useState(false); // New state for polish options
   const [polishContextText, setPolishContextText] = useState(""); // Store text for polishing
-  const [currentOperation, setCurrentOperation] = useState<string | null>(null); // Track the current operation
+  const [_currentOperation, setCurrentOperation] = useState<string | null>(null); // Track the current operation
 
   // 滚动到选中文本的函数
   const scrollToSelection = () => {
@@ -113,7 +113,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
       console.error("Error in scrollToSelection:", e);
     }
   };
-  const [isVisible, setIsVisible] = useState(true); // 添加可见性状态
+  const [_isVisible, _setIsVisible] = useState(true); // 添加可见性状态
   const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedBg] = useLocalStorage<string>("novel__background-color", "white");
   const [aiHighlightEnabled] = useLocalStorage<boolean>("novel__ai-highlight-enabled", true);
@@ -209,7 +209,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
       try {
         const slice = editor.state.selection.content();
         text = editor.storage.markdown.serializer.serialize(slice.content);
-      } catch (e) {
+      } catch (_e) {
         toast.error("获取选中文本失败。");
         return;
       }
@@ -227,7 +227,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
       // For "generate_title", get the entire document content
       try {
         text = editorInstance.getText(); // Get plain text content
-      } catch (e) {
+      } catch (_e) {
         toast.error("获取编辑器内容失败。");
         return;
       }
@@ -284,7 +284,7 @@ export function AiToolboxDialogContent({ editor, onClose }: AiToolboxDialogConte
       try {
         const slice = editor.state.selection.content();
         text = editor.storage.markdown.serializer.serialize(slice.content);
-      } catch (e) {
+      } catch (_e) {
         toast.error("获取选中文本失败。");
         return;
       }

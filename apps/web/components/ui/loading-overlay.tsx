@@ -7,7 +7,7 @@ import { BounceAnimation, PulseAnimation, WaveAnimation } from "./loading-animat
 
 export default function LoadingOverlay() {
   const [isLoading, setIsLoading] = useState(true);
-  const [animationType, setAnimationType] = useState<"pulse" | "bounce" | "wave">("bounce");
+  const [animationType, _setAnimationType] = useState<"pulse" | "bounce" | "wave">("bounce");
   const [selectedBg] = useLocalStorage<string>("novel__background-color", "white");
 
   useEffect(() => {
